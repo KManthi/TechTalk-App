@@ -112,7 +112,7 @@ Technology enthusiasts want to share knowledge, discuss tech topics, and stay up
 
 ### Contribution Workflow
 
-1. First, while on the 'main' branch retrieve any changes to the remote repository:
+1. First, while on the 'main' branch, retrieve any changes to the remote repository:
    ```sh
    git pull
 2. Create a new branch:
