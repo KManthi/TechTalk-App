@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
+from datetime import datetime
 
 metadata = MetaData(
     naming_convention={
@@ -13,7 +14,6 @@ metadata = MetaData(
 )
 
 db = SQLAlchemy(metadata=metadata)
-
 
 class UserProfile(db.Model):
 
@@ -33,3 +33,22 @@ class UserProfile(db.Model):
             'bio': self.bio,
             'social_links': self.social_links
         }
+    
+class Rating(db.Model):
+    __tablename__ = 'ratings'
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    status = db.Column(db.String, nullable=False)
+
+    def __repr__(self):
+        return f'<Rating {self.id}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'post_id': self.post_id,
+            'user_id': self.user_id,
+            'status': self.status
+        }
+    

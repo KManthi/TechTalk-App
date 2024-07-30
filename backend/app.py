@@ -1,7 +1,8 @@
 from flask import Flask, request, make_response, jsonify
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-from models import db, UserProfile
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from models import db, UserProfile, Rating, Post, User
 
 
 app = Flask(__name__)
@@ -78,9 +79,102 @@ class UserProfileByID(Resource):
         except Exception as e:
             db.session.rollback()
             return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
+
+class Ratings(Resource):
+    @jwt_required()
+    def post(self):
+        data = request.get_json()
+        post_id = data.get('post_id')
+        status = data.get('status')
+
+        if status not in ['like', 'dislike']:
+            return make_response(jsonify({'message': 'Bad Request: Invalid status'}), 400)
+
+        user_id = get_jwt_identity()
+
+        post = Post.query.get(post_id)
+        if not post:
+            return make_response(jsonify({'message': 'Post not found'}), 404)
+
+        existing_rating = Rating.query.filter_by(post_id=post_id, user_id=user_id).first()
+        if existing_rating:
+            return make_response(jsonify({'message': 'You have already rated this post.'}), 400)
+        
+        try:
+            new_rating = Rating(
+                post_id=post_id,
+                user_id=user_id,
+                status=status
+            )
+            db.session.add(new_rating)
+            db.session.commit()
+            return make_response(jsonify({'message': 'Rating created'}), 201)
+        except Exception as e:
+            db.session.rollback()
+            return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
+        
+class RatingByID(Resource):
+    @jwt_required()
+    def get(self, id):
+        rating = Rating.query.filter_by(id=id).first()
+        if not rating:
+            return make_response(jsonify({'message': 'Rating not found'}), 404)
+                
+        response = {'rating': rating.to_dict()}
+        return make_response(jsonify(response), 200)
     
+    @jwt_required
+    def put(self, id):
+        data = request.get_json()
+        status = data.get('status')
+        if status not in ['like', 'dislike']:
+            return make_response(jsonify({'message': 'Bad Request: Invalid status'}), 400)
+
+        rating = Rating.query.filter_by(id=id).first()
+        if not rating:
+            return make_response(jsonify({'message': 'Rating not found'}), 404)
+
+        user_id = get_jwt_identity()
+        if rating.user_id != user_id:
+            return make_response(jsonify({'message': 'Forbidden: You are not authorized to update this rating'}), 403)
+
+        rating.status = status
+        db.session.commit()
+
+        return make_response(jsonify({'message': 'Rating updated', 'rating': rating.to_dict()}), 200)
+    
+    @jwt_required()
+    def delete(self, id):
+        rating = Rating.query.filter_by(id=id).first()
+        if not rating:
+            return make_response(jsonify({'message': 'Rating not found'}), 404)
+        
+        user_id = get_jwt_identity()
+        if user_id!= rating.user_id:
+            return make_response(jsonify({'message': 'Forbidden: You are not authorized to delete this rating'}), 403)
+        
+        try:
+            db.session.delete(rating)
+            db.session.commit()
+            return make_response(jsonify({'message': 'Rating deleted'}), 200)
+        except Exception as e:
+            db.session.rollback()
+            return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
+
+class RatingsForPost(Resource):
+    @jwt_required()
+    def get(self, post_id):
+        ratings = Rating.query.filter_by(post_id=post_id).all()
+        if not ratings:
+            return make_response(jsonify({'message': 'No ratings found for this post'}), 404)
+        result = [rating.to_dict() for rating in ratings]
+        return make_response(jsonify(result), 200)
+
 api.add_resource(UserProfiles, '/userprofiles')
 api.add_resource(UserProfileByID, '/userprofiles/<int:id>')
+api.add_resource(Ratings, '/ratings')
+api.add_resource(RatingByID, '/ratings/<int:id>')
+api.add_resource(RatingsForPost, '/posts/<int:post_id>/ratings')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
