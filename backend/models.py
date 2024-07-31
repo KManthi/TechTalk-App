@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 metadata = MetaData(
     naming_convention={
@@ -52,3 +53,23 @@ class Rating(db.Model):
             'status': self.status
         }
     
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128), nullable=False)
+    profile_pic = db.Column(db.String(256), nullable=True)
+    followers_count = db.Column(db.Integer, default=0)
+    following_count = db.Column(db.Integer, default=0)
+
+    def __init__(self, username, email, password, profile_pic=None):
+        self.username = username
+        self.email = email
+        self.password_hash = generate_password_hash(password)
+        self.profile_pic = profile_pic    
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+ 
+
