@@ -2,7 +2,7 @@ from flask import Flask, request, make_response, jsonify
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
-from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites
+from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites, Category, Followers, Settings
 
 
 app = Flask(__name__)
@@ -17,6 +17,7 @@ jwt = JWTManager(app)
 def index():
     return 'Welcome to the Tech Talk API!'
 
+# UserProfile Resources
 class UserProfiles(Resource):
     def get(self):
         user_profiles = UserProfile.query.all()
@@ -369,6 +370,130 @@ api.add_resource(Notifications, '/notifications', '/users/me/notifications')
 api.add_resource(NotificationByID, '/notifications/<int:id>')
 api.add_resource(UserFavourites, '/users/me/favourites', '/users/me/favourites/<int:post_id>', '/users/me/favourites?post_id=<post_id>')
 
+
+# Posts Resources
+class Posts(Resource):
+    def get(self):
+        posts = Post.query.all()
+        result = [post.to_dict() for post in posts]
+        return make_response(jsonify(result), 200)
+    
+    def post(self):
+        data = request.get_json()
+        new_post = Post(
+            title=data['title'],
+            content=data['content'],
+            user_id=data['user_id']
+        )
+        db.session.add(new_post)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Post created successfully'}), 201)
+    
+class PostByID(Resource):
+    def get(self, id):
+        post = Post.query.filter_by(id=id).first()
+        if not post:
+            return make_response(jsonify({'message': 'Post not found'}), 404)
+        return make_response(jsonify(post.to_dict()), 200)
+    
+    def put(self, id):
+        data = request.get_json()
+        post = Post.query.filter_by(id=id).first()
+        if not post:
+            return make_response(jsonify({'message': 'Post not found'}), 404)
+        
+        post.title = data['title']
+        post.content = data['content']
+        db.session.commit()
+        return make_response(jsonify({'message': 'Post updated successfully'}), 200)
+    
+    def delete(self, id):
+        post = Post.query.filter_by(id=id).first()
+        if not post:
+            return make_response(jsonify({'message': 'Post not found'}), 404)
+        
+        db.session.delete(post)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Post deleted successfully'}), 200)
+
+api.add_resource(Posts, '/posts')
+api.add_resource(PostByID, '/posts/<int:id>')
+
+# Categories Resources
+class Categories(Resource):
+    def get(self):
+        categories = Category.query.all()
+        result = [category.to_dict() for category in categories]
+        return make_response(jsonify(result), 200)
+    
+    def post(self):
+        data = request.get_json()
+        new_category = Category(
+            name=data['name'],
+            description=data.get('description')
+        )
+        db.session.add(new_category)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Category created successfully'}), 201)
+    
+class CategoryByID(Resource):
+    def get(self, id):
+        category = Category.query.filter_by(id=id).first()
+        if not category:
+            return make_response(jsonify({'message': 'Category not found'}), 404)
+        return make_response(jsonify(category.to_dict()), 200)
+    
+    def put(self, id):
+        data = request.get_json()
+        category = Category.query.filter_by(id=id).first()
+        if not category:
+            return make_response(jsonify({'message': 'Category not found'}), 404)
+        
+        category.name = data['name']
+        category.description = data.get('description')
+        db.session.commit()
+        return make_response(jsonify({'message': 'Category updated successfully'}), 200)
+    
+    def delete(self, id):
+        category = Category.query.filter_by(id=id).first()
+        if not category:
+            return make_response(jsonify({'message': 'Category not found'}), 404)
+        
+        db.session.delete(category)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Category deleted successfully'}), 200)
+
+api.add_resource(Categories, '/categories')
+api.add_resource(CategoryByID, '/categories/<int:id>')
+
+# Followers Resources
+class FollowersResource(Resource):
+    def post(self):
+        data = request.get_json()
+        new_follow = Followers(
+            follower_id=data['follower_id'],
+            followed_id=data['followed_id']
+        )
+        db.session.add(new_follow)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Followed successfully'}), 201)
+
+api.add_resource(FollowersResource, '/followers')
+
+# Setting Resources
+class SettingsResource(Resource):
+    def post(self):
+        data = request.get_json()
+        settings = Settings.query.filter_by(user_id=data['user_id']).first()
+        if settings:
+            settings.preferences = data['preferences']
+        else:
+            settings = Settings(user_id=data['user_id'], preferences=data['preferences'])
+            db.session.add(settings)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Settings updated successfully'}), 200)
+
+api.add_resource(SettingsResource, '/settings')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
