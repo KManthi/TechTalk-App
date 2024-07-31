@@ -2,14 +2,20 @@ from flask import Flask, request, make_response, jsonify
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from models import db, UserProfile
-
+from followers import bp as followers_bp
+from settings import bp as settings_bp
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///techtalk.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 migrate = Migrate(app, db)
 db.init_app(app)
 api = Api(app)
+
+# Register Blueprints
+app.register_blueprint(followers_bp, url_prefix='/api')
+app.register_blueprint(settings_bp, url_prefix='/api')
 
 @app.route('/')
 def index():

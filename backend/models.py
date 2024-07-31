@@ -1,3 +1,4 @@
+# other imports
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
@@ -117,7 +118,7 @@ class Settings(db.Model):
     __tablename__ = 'settings'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    preferences = db.Column(db.JSON, nullable=False)
+    preferences = db.Column(db.String(255), nullable=False)
 
     user = db.relationship('User', backref=db.backref('settings', lazy=True))
 
