@@ -13,6 +13,7 @@ migrate = Migrate(app, db)
 api = Api(app)
 jwt = JWTManager(app)
 
+
 @app.route('/')
 def index():
     return 'Welcome to the Tech Talk API!'
@@ -20,10 +21,10 @@ def index():
 @app.route('/users', methods=['POST'])
 def create_user():
     data = request.get_json()
-    if not 'username' in data or not data or not 'email' in data or not 'password' in data:
-        return jsonify({'message': 'missing data'}), 400
+    if not data or not 'username' in data or not 'email' in data or not 'password' in data:
+        return jsonify({'message': 'Missing data'}), 400
     
-    hashed_password= generate_password_hash(data['password'])
+    hashed_password = generate_password_hash(data['password'])
     user = User(
         username=data['username'],
         email=data['email'],
@@ -73,13 +74,13 @@ def delete_user(id):
 def check_password(id):
     data = request.get_json()
     if not data or not 'password' in data:
-        return jsonify({'message': 'Missing password'}), 404
+        return jsonify({'message': 'Missing password'}), 400
 
     user = User.query.get_or_404(id)
     if user.check_password(data['password']):
         return jsonify({'message': 'Password is correct'}), 200
     else:
-        return jsonify({'message': 'Incorrect password'}), 404
+        return jsonify({'message': 'Incorrect password'}), 401
 
 
 class UserProfiles(Resource):
