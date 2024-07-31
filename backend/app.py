@@ -3,7 +3,7 @@ from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites
-
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///techtalk.db'
@@ -16,6 +16,71 @@ jwt = JWTManager(app)
 @app.route('/')
 def index():
     return 'Welcome to the Tech Talk API!'
+
+@app.route('/users', methods=['POST'])
+def create_user():
+    data = request.get_json()
+    if not 'username' in data or not data or not 'email' in data or not 'password' in data:
+        return jsonify({'message': 'missing data'}), 400
+    
+    hashed_password= generate_password_hash(data['password'])
+    user = User(
+        username=data['username'],
+        email=data['email'],
+        password_hash=hashed_password,
+        profile_pic=data.get('profile_pic'),
+        followers_count=data.get('followers_count', 0),
+        following_count=data.get('following_count', 0)
+    )
+    db.session.add(user)
+    db.session.commit()
+    return jsonify(user.to_dict()), 201
+
+@app.route('/users/<int:id>', methods=['GET'])
+def get_user(id):
+    user = User.query.get_or_404(id)
+    return jsonify(user.to_dict())
+
+@app.route('/users/<int:id>', methods=['PUT'])
+def update_user(id):
+    user = User.query.get_or_404(id)
+    data = request.get_json()
+
+    if 'username' in data:
+        user.username = data['username']
+    if 'email' in data:
+        user.email = data['email']
+    if 'profile_pic' in data:
+        user.profile_pic = data['profile_pic']
+    if 'password' in data:
+        user.password_hash = generate_password_hash(data['password'])
+    if 'followers_count' in data:
+        user.followers_count = data['followers_count']
+    if 'following_count' in data:
+        user.following_count = data['following_count']
+
+    db.session.commit()
+    return jsonify(user.to_dict())
+
+@app.route('/users/<int:id>', methods=['DELETE'])
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'message': 'User deleted'}), 204
+
+@app.route('/users/<int:id>/check_password', methods=['POST'])
+def check_password(id):
+    data = request.get_json()
+    if not data or not 'password' in data:
+        return jsonify({'message': 'Missing password'}), 404
+
+    user = User.query.get_or_404(id)
+    if user.check_password(data['password']):
+        return jsonify({'message': 'Password is correct'}), 200
+    else:
+        return jsonify({'message': 'Incorrect password'}), 404
+
 
 class UserProfiles(Resource):
     def get(self):
