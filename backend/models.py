@@ -126,4 +126,23 @@ class UserFavourites(db.Model):
             'post_id': self.post_id
         }
     
+class Comment(db.Model):
+    __table__ = 'comment'
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    def __repr__(self):
+        return f'<Comment {self.id}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.user_id,
+            'post_id': self.post_id,
+            'user_id': self.user_id,
+            'content': self.content,
+            'created_at': self.created_at
+
+        }
