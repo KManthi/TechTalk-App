@@ -191,7 +191,7 @@ class FollowersResource(Resource):
 
 api.add_resource(FollowersResource, '/followers')
 
-# Settings Resources
+# Setting Resources
 class SettingsResource(Resource):
     def post(self):
         data = request.get_json()
