@@ -201,9 +201,7 @@ class UserFavourites(db.Model):
             'user_id': self.user_id,
             'post_id': self.post_id
         }
-<<<<<<< HEAD
-=======
-    
+
 class Comment(db.Model):
     __table__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)

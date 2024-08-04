@@ -2,12 +2,9 @@ from flask import Flask, request, make_response, jsonify
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
-<<<<<<< HEAD
-from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites
-=======
 from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites, Category, Followers, Settings, Attachment, Tag, Messages, Comment
 from werkzeug.security import generate_password_hash
->>>>>>> a062efd (Adds comment routes)
+
 
 
 app = Flask(__name__)
@@ -23,8 +20,6 @@ jwt = JWTManager(app)
 def index():
     return 'Welcome to the Tech Talk API!'
 
-<<<<<<< HEAD
-=======
 class UserResource(Resource):
     def post(self):
         data = request.get_json()
@@ -90,7 +85,6 @@ api.add_resource(UserResource, '/users', '/users/<int:id>')
 api.add_resource(CheckPasswordResource, '/users/<int:id>/check_password')
 
 # UserProfile Resources
->>>>>>> a062efd (Adds comment routes)
 class UserProfiles(Resource):
     def get(self):
         user_profiles = UserProfile.query.all()
