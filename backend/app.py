@@ -2,7 +2,12 @@ from flask import Flask, request, make_response, jsonify
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
+<<<<<<< HEAD
 from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites
+=======
+from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites, Category, Followers, Settings, Attachment, Tag, Messages, Comment
+from werkzeug.security import generate_password_hash
+>>>>>>> a062efd (Adds comment routes)
 
 
 app = Flask(__name__)
@@ -13,11 +18,78 @@ migrate = Migrate(app, db)
 api = Api(app)
 jwt = JWTManager(app)
 
-
 @app.route('/')
 def index():
     return 'Welcome to the Tech Talk API!'
 
+<<<<<<< HEAD
+=======
+class UserResource(Resource):
+    def post(self):
+        data = request.get_json()
+        if not data or not all(key in data for key in ('username', 'email', 'password')):
+            return {'message': 'Missing data'}, 400
+
+        hashed_password = generate_password_hash(data['password'])
+        user = User(
+            username=data['username'],
+            email=data['email'],
+            password_hash=hashed_password,
+            profile_pic=data.get('profile_pic'),
+            followers_count=data.get('followers_count', 0),
+            following_count=data.get('following_count', 0)
+        )
+        db.session.add(user)
+        db.session.commit()
+        return user.to_dict(), 201
+
+    def get(self, id):
+        user = User.query.get_or_404(id)
+        return user.to_dict()
+
+    def put(self, id):
+        user = User.query.get_or_404(id)
+        data = request.get_json()
+
+        if 'username' in data:
+            user.username = data['username']
+        if 'email' in data:
+            user.email = data['email']
+        if 'profile_pic' in data:
+            user.profile_pic = data['profile_pic']
+        if 'password' in data:
+            user.password_hash = generate_password_hash(data['password'])
+        if 'followers_count' in data:
+            user.followers_count = data['followers_count']
+        if 'following_count' in data:
+            user.following_count = data['following_count']
+
+        db.session.commit()
+        return user.to_dict()
+
+    def delete(self, id):
+        user = User.query.get_or_404(id)
+        db.session.delete(user)
+        db.session.commit()
+        return {'message': 'User deleted'}, 204
+
+class CheckPasswordResource(Resource):
+    def post(self, id):
+        data = request.get_json()
+        if not data or 'password' not in data:
+            return {'message': 'Missing password'}, 400
+
+        user = User.query.get_or_404(id)
+        if user.check_password(data['password']):
+            return {'message': 'Password is correct'}, 200
+        else:
+            return {'message': 'Incorrect password'}, 401
+
+api.add_resource(UserResource, '/users', '/users/<int:id>')
+api.add_resource(CheckPasswordResource, '/users/<int:id>/check_password')
+
+# UserProfile Resources
+>>>>>>> a062efd (Adds comment routes)
 class UserProfiles(Resource):
     def get(self):
         user_profiles = UserProfile.query.all()
@@ -494,6 +566,59 @@ class SettingsResource(Resource):
         return make_response(jsonify({'message': 'Settings updated successfully'}), 200)
 
 api.add_resource(SettingsResource, '/settings')
+
+class Comments(Resource):
+    @jwt_required()
+    def post(self, post_id):
+        data = request.get_json()
+        user_id = get_jwt_identity()
+
+        if not Post.query.filter_by(id=post_id).first():
+            return make_response(jsonify({'message': 'Post not found'}), 404)
+        
+        new_comment = Comments(
+            content=data['content'],
+            user_id=user_id,
+            post_id=post_id
+        )
+        db.session.add(new_comment)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Comment created successfully'}), 201)
+    
+    def get(self, id, post_id):
+        comments = Comments.query.filter_by(id=id, post_id=post_id).first()
+        if not comments:
+            return make_response(jsonify({'message': 'Comment not found'}), 404)
+        
+        result = [comment.to_dict() for comment in comments]
+        return make_response(jsonify(result), 200)
+    
+    def put(self, post_id, id):
+        data = request.get_json()
+        comment = Comments.query.filter_by(id=id, post_id=post_id).first()
+        if not comment:
+            return make_response(jsonify({'message': 'Comment not found'}), 404)
+        
+        comment.content = data['content']
+        db.session.commit()
+        return make_response(jsonify({'message': 'Comment updated successfully'}), 200)
+    
+    def delete(self, post_id, id):
+        comment = Comments.query.filter_by(id=id, post_id=post_id).first()
+        if not comment:
+            return make_response(jsonify({'message': 'Comment not found'}), 404)
+        
+        db.session.delete(comment)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Comment deleted successfully'}), 200)
+    
+class CommentListResource(Resource):
+    def get(self, post_id):
+        comments = Comment.query.filter_by(post_id=post_id).all()
+        return [comment.to_dict() for comment in comments]
+    
+api.add_resource(Comments, '/posts/<int:post_id>/comments', '/posts/<int:post_id>/comments/<int:id>')
+api.add_resource(CommentListResource, '/posts/<int:post_id>/comments')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)

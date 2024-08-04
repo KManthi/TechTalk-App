@@ -238,4 +238,78 @@ class Tag(db.Model):
             'name':self.name
 
         }
->>>>>>> origin/tag-module
+    
+class Comment(db.Model):
+    __tablename__ = 'comment'
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Comment {self.id}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.user_id,
+            'post_id': self.post_id,
+            'user_id': self.user_id,
+            'content': self.content,
+            'created_at': self.created_at
+
+        }
+    
+    class Tag(db.Model):
+       __tablename__ = 'tags'
+       id = db.Column(db.Integer, primary_key=True)
+       name = db.Column(db.String(80), unique=True, nullable=False)
+
+       def __repr__(self):
+           return f'<Tag {self.name}>'
+    
+       def to_dict(self):
+                   return {
+               'id': self.id,
+               'name':self.name
+
+           }
+       
+class Tag(db.Model):
+    __tablename__ = 'tags'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=True, nullable=False)
+
+    def __repr__(self):
+        return f'<Tag {self.name}>'
+    
+    def to_dict(self):
+                return {
+            'id': self.id,
+            'name':self.name
+
+        }
+    
+class Messages(db.Model):
+    __tablename__ = 'messages'
+
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    content = db.Column(db.String, nullable=False)
+    sent_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_messages', lazy='dynamic'))
+    receiver = db.relationship('User', foreign_keys=[receiver_id], backref=db.backref('received_messages', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Message sender_id={self.sender_id}, receiver_id={self.receiver_id}, content={self.content}, sent_at={self.sent_at}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'sender_id': self.sender_id,
+            'receiver_id': self.receiver_id,
+            'content': self.content,
+            'sent_at': self.sent_at
+        }
