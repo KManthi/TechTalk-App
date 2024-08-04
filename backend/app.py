@@ -18,6 +18,7 @@ migrate = Migrate(app, db)
 api = Api(app)
 jwt = JWTManager(app)
 
+
 @app.route('/')
 def index():
     return 'Welcome to the Tech Talk API!'
@@ -566,59 +567,6 @@ class SettingsResource(Resource):
         return make_response(jsonify({'message': 'Settings updated successfully'}), 200)
 
 api.add_resource(SettingsResource, '/settings')
-
-class Comments(Resource):
-    @jwt_required()
-    def post(self, post_id):
-        data = request.get_json()
-        user_id = get_jwt_identity()
-
-        if not Post.query.filter_by(id=post_id).first():
-            return make_response(jsonify({'message': 'Post not found'}), 404)
-        
-        new_comment = Comments(
-            content=data['content'],
-            user_id=user_id,
-            post_id=post_id
-        )
-        db.session.add(new_comment)
-        db.session.commit()
-        return make_response(jsonify({'message': 'Comment created successfully'}), 201)
-    
-    def get(self, id, post_id):
-        comments = Comments.query.filter_by(id=id, post_id=post_id).first()
-        if not comments:
-            return make_response(jsonify({'message': 'Comment not found'}), 404)
-        
-        result = [comment.to_dict() for comment in comments]
-        return make_response(jsonify(result), 200)
-    
-    def put(self, post_id, id):
-        data = request.get_json()
-        comment = Comments.query.filter_by(id=id, post_id=post_id).first()
-        if not comment:
-            return make_response(jsonify({'message': 'Comment not found'}), 404)
-        
-        comment.content = data['content']
-        db.session.commit()
-        return make_response(jsonify({'message': 'Comment updated successfully'}), 200)
-    
-    def delete(self, post_id, id):
-        comment = Comments.query.filter_by(id=id, post_id=post_id).first()
-        if not comment:
-            return make_response(jsonify({'message': 'Comment not found'}), 404)
-        
-        db.session.delete(comment)
-        db.session.commit()
-        return make_response(jsonify({'message': 'Comment deleted successfully'}), 200)
-    
-class CommentListResource(Resource):
-    def get(self, post_id):
-        comments = Comment.query.filter_by(post_id=post_id).all()
-        return [comment.to_dict() for comment in comments]
-    
-api.add_resource(Comments, '/posts/<int:post_id>/comments', '/posts/<int:post_id>/comments/<int:id>')
-api.add_resource(CommentListResource, '/posts/<int:post_id>/comments')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
