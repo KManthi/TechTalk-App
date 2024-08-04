@@ -112,28 +112,42 @@ Technology enthusiasts want to share knowledge, discuss tech topics, and stay up
 
 ### Contribution Workflow
 
-1. First, while on the 'main' branch, retrieve any changes to the remote repository:
+1. **First, while on the 'main' branch, retrieve any changes to the remote repository:**
    ```sh
    git pull
-2. Create a new branch:
+2. **Create a new branch:<br>**
+   If working on a feature, or bugfix
    ```sh
-   git chechkout -b your-feature-name
-3. Complete and commit your tasks:
+   git chechkout -b FEAT/your-feature-name/your-name
+   git chechkout -b BUGFIX/your-fix/your-name
+3. **Complete and commit your tasks:**
    ```sh
    git add .
    git commit -m "your commit message"
-   git push -u origin your-feature-name
-4. Once satisfied with your work:
+4. **Push your branch to the remote repository:**
    ```sh
-   git switch main
+   git push -u origin your-feature-name
+5. **Create a new pull request:<br>**
+   Go to the repo on github and create a pull request from 'your-feature-name' to 'main'.
+
+6. **Review and get feedback:<br>**
+   Address any feedback or requested changes.
+   Commit and push any additional changes to your-feature-name
+
+7. __Once approved, merge your branch:__
+   ```sh
+   git checkout main
    git pull origin main
    git merge your-feature-name
-5. Fix any merge conflicts:
+   ```
+   Ensure that you fix any merge conflicts that may arise.
+5. **Push the updated main branch:**
    ```sh
    git push origin main
-6. Once your changes have been added to the main branch and no merge conflicts exist, delete your branch:
+6. **Delete your branch locally and remotely:**
    ```sh
    git branch -d your-feature-name
+   git push origin --delete your-feature-name
 ### License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
