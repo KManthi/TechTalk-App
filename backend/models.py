@@ -201,3 +201,31 @@ class UserFavourites(db.Model):
             'user_id': self.user_id,
             'post_id': self.post_id
         }
+class Attachment(db.model):
+    __tablename__ = 'attachments'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), nullable=True)
+    comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'), nullable=True)
+    file_path = db.Column(db.String, nullable=False)
+    uploaded_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    post = db.relationship('Post', back_populates='attachments')
+    comment = db.relationship('Comment', back_populates='attachments')
+
+    def __repr__(self):
+        return f"<Attachment(id={self.id}, post_id={self.post_id}, comment_id={self.comment_id}, file_path='{self.file_path}', uploaded_at={self.uploaded_at})>"
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'post_id': self.post_id,
+            'comment_id':self.comment_id,
+            'file_path ':self.file_path,
+            'uploaded_at':self.uploaded_at,
+            'post':self.post,
+            'comment':self.comment
+
+        }
+    
