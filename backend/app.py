@@ -2,8 +2,7 @@ from flask import Flask, request, make_response, jsonify
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
-from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites, Category, Followers, Settings,Attachment
-
+from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites
 
 
 app = Flask(__name__)
@@ -19,10 +18,6 @@ jwt = JWTManager(app)
 def index():
     return 'Welcome to the Tech Talk API!'
 
-
-
-
-# UserProfile Resources
 class UserProfiles(Resource):
     def get(self):
         user_profiles = UserProfile.query.all()
