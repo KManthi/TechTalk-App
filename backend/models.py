@@ -30,6 +30,7 @@ class User(db.Model):
     profile_pic = db.Column(db.String(256), nullable=True)
     followers_count = db.Column(db.Integer, default=0)
     following_count = db.Column(db.Integer, default=0)
+    is_admin = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -41,7 +42,8 @@ class User(db.Model):
             'email': self.email,
             'profile_pic': self.profile_pic,
             'followers_count': self.followers_count,
-            'following_count': self.following_count
+            'following_count': self.following_count,
+            'is_admin': self.is_admin
         }   
 
     def check_password(self, password):
@@ -53,6 +55,8 @@ class UserProfile(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     bio = db.Column(db.Text)
     social_links = db.Column(db.String(255))
+
+    user = db.relationship('User', backref=db.backref('profile', uselist=False))
 
     def __repr__(self):
         return f'<UserProfile {self.user_id}>'
@@ -190,8 +194,10 @@ class UserFavourites(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), primary_key=True)
 
-    db.relationship('User', backref=db.backref('favourites', lazy=True))
-    db.relationship('Post', backref=db.backref('favourited_by', lazy=True))
+    user = db.relationship('User', backref=db.backref('favourites', lazy=True))
+    post = db.relationship('Post', backref=db.backref('favourited_by', lazy=True))
+
+    __table_args__ = (db.UniqueConstraint('user_id', 'post_id', name='uix_user_post'),)
 
     def __repr__(self):
         return f'<UserFavourite user_id={self.user_id} post_id={self.post_id}>'
@@ -203,28 +209,32 @@ class UserFavourites(db.Model):
         }
 
 class Comment(db.Model):
-    __table__ = 'comment'
+    __tablename__ = 'comments'
     id = db.Column(db.Integer, primary_key=True)
-    post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
+    post = db.relationship('Post', backref=db.backref('comments', lazy=True))
+    user = db.relationship('User', backref=db.backref('comments', lazy=True))
+    
     def __repr__(self):
         return f'<Comment {self.id}>'
     
     def to_dict(self):
         return {
-            'id': self.user_id,
+            'id': self.id,
             'post_id': self.post_id,
             'user_id': self.user_id,
             'content': self.content,
             'created_at': self.created_at
 
         }
+    
 class Tag(db.Model):
     __tablename__ = 'tags'
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
     name = db.Column(db.String(80), unique=True, nullable=False)
 
     def __repr__(self):
@@ -237,3 +247,51 @@ class Tag(db.Model):
 
         }
     
+class Messages(db.Model):
+    __tablename__ ='messages'
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_messages', lazy='dynamic'))
+    recipient = db.relationship('User', foreign_keys=[recipient_id], backref=db.backref('received_messages', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Message {self.id}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'sender_id': self.sender_id,
+            'recipient_id': self.recipient_id,
+            'content': self.content,
+            'created_at': self.created_at
+        }
+
+class Attachment(db.Model):
+    __tablename__ = 'attachments'
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    filepath = db.Column(db.String(255), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), nullable=True)
+    comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  
+
+    post = db.relationship('Post', backref=db.backref('attachments', lazy='dynamic'))
+    comment = db.relationship('Comment', backref=db.backref('attachments', lazy='dynamic'))
+    user = db.relationship('User', backref=db.backref('attachments', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Attachment {self.filename}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'filename': self.filename,
+            'filepath': self.filepath,
+            'post_id': self.post_id,
+            'comment_id': self.comment_id,
+            'user_id': self.user_id  
+        }

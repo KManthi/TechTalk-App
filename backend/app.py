@@ -1,10 +1,11 @@
+import os
 from flask import Flask, request, make_response, jsonify
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
 from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites, Category, Followers, Settings, Attachment, Tag, Messages, Comment
 from werkzeug.security import generate_password_hash
-
+from werkzeug.utils import secure_filename
 
 
 app = Flask(__name__)
@@ -14,7 +15,8 @@ db.init_app(app)
 migrate = Migrate(app, db)
 api = Api(app)
 jwt = JWTManager(app)
-
+UPLOAD_FOLDER = 'backend/upload_folder'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'docx'}
 
 @app.route('/')
 def index():
@@ -33,7 +35,8 @@ class UserResource(Resource):
             password_hash=hashed_password,
             profile_pic=data.get('profile_pic'),
             followers_count=data.get('followers_count', 0),
-            following_count=data.get('following_count', 0)
+            following_count=data.get('following_count', 0),
+            is_admin=data.get('is_admin', False)
         )
         db.session.add(user)
         db.session.commit()
@@ -59,6 +62,8 @@ class UserResource(Resource):
             user.followers_count = data['followers_count']
         if 'following_count' in data:
             user.following_count = data['following_count']
+        if 'is_admin' in data:
+            user.is_admin = data['is_admin']
 
         db.session.commit()
         return user.to_dict()
@@ -561,6 +566,285 @@ class SettingsResource(Resource):
         return make_response(jsonify({'message': 'Settings updated successfully'}), 200)
 
 api.add_resource(SettingsResource, '/settings')
+
+# Comment Resources
+
+class CommentResource(Resource):
+    @jwt_required()
+    def post(self, post_id):
+        data = request.get_json()
+        user_id = get_jwt_identity()
+        new_comment = Comment(
+            content=data['content'],
+            user_id=user_id,
+            post_id=post_id
+        )
+        db.session.add(new_comment)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Comment created successfully'}), 201)
+    
+    @jwt_required()
+    def get(self, post_id, id):
+        comment = Comment.query.filter_by(id=id, post_id=post_id).first()
+        if not comment:
+            return make_response(jsonify({'message': 'Comment not found'}), 404)
+        return make_response(jsonify(comment.to_dict()), 200)
+    
+    @jwt_required()
+    def put(self, post_id, id):
+        data = request.get_json()
+        comment = Comment.query.filter_by(id=id, post_id=post_id).first()
+        if not comment:
+            return make_response(jsonify({'message': 'Comment not found'}), 404)
+        
+        comment.content = data['content']
+        db.session.commit()
+        return make_response(jsonify({'message': 'Comment updated successfully'}), 200)
+    
+    @jwt_required()
+    def delete(self, post_id, id):
+        comment = Comment.query.filter_by(id=id, post_id=post_id).first()
+        if not comment:
+            return make_response(jsonify({'message': 'Comment not found'}), 404)
+        
+        db.session.delete(comment)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Comment deleted successfully'}), 200)
+    
+class CommmentsListResource(Resource):
+    def get(self, post_id):
+        comments = Comment.query.filter_by(post_id=post_id).all()
+        result = [comment.to_dict() for comment in comments]
+        return make_response(jsonify(result), 200)
+    
+api.add_resource(CommentResource, '/posts/<int:post_id>/comments/<int:id>')
+api.add_resource(CommmentsListResource, '/posts/<int:post_id>/comments')
+
+# Messages Resources
+
+class MessageResource(Resource):
+    @jwt_required()
+    def post(self, recipient_id):
+        data = request.get_json()
+        user_id = get_jwt_identity()
+        new_message = Messages(
+            content=data['content'],
+            sender_id=user_id,
+            recipient_id=recipient_id
+        )
+        db.session.add(new_message)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Message sent successfully'}), 201)
+    
+    @jwt_required()
+    def get(self, id):
+        user_id = get_jwt_identity()
+        message = Messages.query.filter_by(id=id).first()
+        if not message:
+            return make_response(jsonify({'message': 'Message not found'}), 404)
+        if message.sender_id != user_id and message.recipient_id != user_id:
+            return make_response(jsonify({'message': 'Unauthorized'}), 403)
+        return make_response(jsonify(message.to_dict()), 200)
+    
+    @jwt_required()
+    def put(self, id):
+        data = request.get_json()
+        user_id = get_jwt_identity()
+        message = Messages.query.filter_by(id=id).first()
+        if not message:
+            return make_response(jsonify({'message': 'Message not found'}), 404)
+        if message.sender_id!= user_id:
+            return make_response(jsonify({'message': 'Unauthorized'}), 403)
+        
+        message.content = data['content']
+        db.session.commit()
+        return make_response(jsonify({'message': 'Message updated successfully'}), 200)
+    
+    @jwt_required()
+    def delete(self, id):
+        user_id = get_jwt_identity()
+        message = Messages.query.filter_by(id=id).first()
+        if not message:
+            return make_response(jsonify({'message': 'Message not found'}), 404)
+        if message.sender_id!= user_id:
+            return make_response(jsonify({'message': 'Unauthorized'}), 403)
+        
+        db.session.delete(message)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Message deleted successfully'}), 200)
+    
+api.add_resource(MessageResource, '/users/me/messages/<int:id>', '/users/me/messages')
+
+# Tag Resources
+
+def is_admin(user_id):
+    user = User.query.filter_by(id=user_id).first()
+    return user.is_admin if user else False
+
+class TagResource(Resource):
+    @jwt_required()
+    def post(self):
+        user_id = get_jwt_identity()
+        if not is_admin(user_id):
+            return make_response(jsonify({'message': 'Unauthorized'}), 403)
+        data = request.get_json()
+        new_tag = Tag(name=data['name'])
+        db.session.add(new_tag)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Tag created successfully'}), 201)
+    
+    def get(self, id):
+        tag = Tag.query.filter_by(id=id).first()
+        if not tag:
+            return make_response(jsonify({'message': 'Tag not found'}), 404)
+        return make_response(jsonify(tag.to_dict()), 200)
+    
+    @jwt_required()
+    def put(self, id):
+        user_id = get_jwt_identity()
+        if not is_admin(user_id):
+            return make_response(jsonify({'message': 'Unauthorized'}), 403)
+        data = request.get_json()
+        tag = Tag.query.filter_by(id=id).first()
+        if not tag:
+            return make_response(jsonify({'message': 'Tag not found'}), 404)
+        
+        tag.name = data['name']
+        db.session.commit()
+        return make_response(jsonify({'message': 'Tag updated successfully'}), 200)
+    
+    @jwt_required()
+    def delete(self, id):
+        user_id = get_jwt_identity()
+        if not is_admin(user_id):
+            return make_response(jsonify({'message': 'Unauthorized'}), 403)
+        tag = Tag.query.filter_by(id=id).first()
+        if not tag:
+            return make_response(jsonify({'message': 'Tag not found'}), 404)
+        
+        db.session.delete(tag)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Tag deleted successfully'}), 200)
+
+class TagListResource(Resource):
+    def get(self):
+        tags = Tag.query.all()
+        result = [tag.to_dict() for tag in tags]
+        return make_response(jsonify(result), 200)
+
+
+api.add_resource(TagResource, '/tags', '/tags/<int:id>')
+api.add_resource(TagListResource, '/tags')
+
+# Attachment Resources
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+class AttachmentResource(Resource):
+    @jwt_required()
+    def post(self):
+        user_id = get_jwt_identity()
+
+        if 'file' not in request.files:
+            return {'message': 'No file part'}, 400
+
+        file = request.files['file']
+        if file.filename == '':
+            return {'message': 'No selected file'}, 400
+
+        if not allowed_file(file.filename):
+            return {'message': 'File type not allowed'}, 400
+
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+
+        try:
+            file.save(filepath)
+        except Exception as e:
+            return {'message': 'Failed to save file'}, 500
+
+        post_id = request.form.get('post_id')
+        comment_id = request.form.get('comment_id')
+
+        if not post_id and not comment_id:
+            return {'message': 'Must provide either post_id or comment_id or both'}, 400
+
+        if post_id:
+            post = Post.query.get(post_id)
+            if not post:
+                os.remove(filepath)  
+                return {'message': 'Post not found'}, 404
+
+        if comment_id:
+            comment = Comment.query.get(comment_id)
+            if not comment:
+                os.remove(filepath)  
+                return {'message': 'Comment not found'}, 404
+
+        new_attachment = Attachment(
+            filename=filename,
+            filepath=filepath,
+            post_id=post_id,
+            comment_id=comment_id,
+        )
+
+        try:
+            db.session.add(new_attachment)
+            db.session.commit()
+        except Exception as e:
+            os.remove(filepath)  
+            return {'message': 'Failed to save attachment'}, 500
+
+        return make_response(jsonify(new_attachment.to_dict()), 201)
+    
+    @jwt_required()
+    def get(self, id):
+        attachment = Attachment.query.get(id)
+        if not attachment:
+            return {'message': 'Attachment not found'}, 404
+
+        return make_response(jsonify(attachment.to_dict()), 200)
+    
+    @jwt_required()
+    def delete(self, attachment_id):
+        user_id = get_jwt_identity()
+        attachment = Attachment.query.get_or_404(attachment_id)
+        
+        if not attachment:
+            return {'message': 'Attachment not found'}, 404
+        if attachment.user_id != user_id and not is_admin(user_id):
+            return {'message': 'Unauthorized'}, 403
+
+        try:
+            os.remove(attachment.filepath)  
+            db.session.delete(attachment)
+            db.session.commit()
+            return {'message': 'Attachment deleted successfully'}, 200
+        except Exception as e:
+            return {'message': 'Failed to delete attachment'}, 500
+
+api.add_resource(AttachmentResource, '/attachments', '/attachments/<int:id>')
+
+class CommentAttachmentsResource(Resource):
+    def get(self, comment_id):
+        comment = Comment.query.get_or_404(comment_id)
+        attachments = Attachment.query.filter_by(comment_id=comment_id).all()
+        result = [attachment.to_dict() for attachment in attachments]
+        return make_response(jsonify(result), 200)
+
+api.add_resource(CommentAttachmentsResource, '/comments/<int:comment_id>/attachments')
+
+class PostAttachmentsResource(Resource):
+    def get(self, post_id):
+        post = Post.query.get_or_404(post_id)
+        attachments = Attachment.query.filter_by(post_id=post_id).all()
+        result = [attachment.to_dict() for attachment in attachments]
+        return make_response(jsonify(result), 200)
+
+api.add_resource(PostAttachmentsResource, '/posts/<int:post_id>/attachments')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
