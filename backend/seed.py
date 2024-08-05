@@ -9,7 +9,9 @@ from app import app
 from models import db, User, UserProfile, Rating, Post, Category, followers, Settings, UserFavourites, Comment, Tag, Messages, Attachment, RatingStatus, post_tags, Notifications
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
+from dotenv import load_dotenv
 
+load_dotenv()
 
 fake = Faker()
 

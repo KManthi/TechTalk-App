@@ -45,10 +45,10 @@ followers = db.Table('followers',
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    username = db.Column(db.String(128), unique=True, nullable=False)
+    email = db.Column(db.String(128), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
-    profile_pic = db.Column(db.String(256), nullable=True)
+    profile_pic = db.Column(db.String(128), nullable=True)
     followers_count = db.Column(db.Integer, default=0)
     following_count = db.Column(db.Integer, default=0)
     is_admin = db.Column(db.Boolean, default=False)

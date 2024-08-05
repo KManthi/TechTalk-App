@@ -1,8 +1,8 @@
 """Initial migration
 
-Revision ID: 943d1595070d
+Revision ID: d05825af0c06
 Revises: 
-Create Date: 2024-08-05 18:23:25.954431
+Create Date: 2024-08-05 21:01:57.599539
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '943d1595070d'
+revision = 'd05825af0c06'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -48,7 +48,8 @@ def upgrade():
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['followed_id'], ['users.id'], name=op.f('fk_followers_followed_id')),
     sa.ForeignKeyConstraint(['follower_id'], ['users.id'], name=op.f('fk_followers_follower_id')),
-    sa.PrimaryKeyConstraint('follower_id', 'followed_id', name=op.f('pk_followers'))
+    sa.PrimaryKeyConstraint('follower_id', 'followed_id', name=op.f('pk_followers')),
+    sa.UniqueConstraint('follower_id', 'followed_id', name='uix_follower_followed')
     )
     op.create_table('messages',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -71,14 +72,14 @@ def upgrade():
     )
     op.create_table('posts',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('author_id', sa.Integer(), nullable=False),
     sa.Column('category_id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(length=255), nullable=False),
     sa.Column('content', sa.Text(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['author_id'], ['users.id'], name=op.f('fk_posts_author_id')),
     sa.ForeignKeyConstraint(['category_id'], ['categories.id'], name=op.f('fk_posts_category_id')),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_posts_user_id')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_posts'))
     )
     op.create_table('settings',
@@ -90,7 +91,7 @@ def upgrade():
     op.create_table('user_profiles',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('bio', sa.Text(), nullable=True),
+    sa.Column('bio', sa.String(length=200), nullable=True),
     sa.Column('social_links', sa.String(length=255), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], name=op.f('fk_user_profiles_user_id')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_user_profiles'))

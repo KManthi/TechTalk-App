@@ -3,15 +3,17 @@ from flask import Flask, request, make_response, jsonify
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token, get_jwt
-from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites, Category, followers, Settings, Attachment, Tag, Messages, Comment
+from backend.models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites, Category, followers, Settings, Attachment, Tag, Messages, Comment
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
 
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///techtalk.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = 'jwt-secret'
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
 db.init_app(app)
 migrate = Migrate(app, db)
 api = Api(app)
