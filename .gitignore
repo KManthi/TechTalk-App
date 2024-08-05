@@ -69,3 +69,6 @@ __pycache__
 
 # NPM package lock file
 package-lock.json
+
+# env file
+.env
