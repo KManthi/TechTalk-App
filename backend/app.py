@@ -3,7 +3,7 @@ from flask import Flask, request, make_response, jsonify
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token, get_jwt
-from backend.models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites, Category, followers, Settings, Attachment, Tag, Messages, Comment
+from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites, Category, followers, Settings, Attachment, Tag, Messages, Comment
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
@@ -77,6 +77,13 @@ class UserResource(Resource):
         return user.to_dict(), 201
     
     @jwt_required()
+    def get(self):
+        users = User.query.all()
+        result = [user.to_dict() for user in users]
+        return make_response(jsonify(result), 200)
+    
+class SpecificUser(Resource):
+    @jwt_required()
     def get(self, id):
         user = User.query.get_or_404(id)
         return user.to_dict()
@@ -103,19 +110,13 @@ class UserResource(Resource):
 
         db.session.commit()
         return user.to_dict()
-
+    
     @jwt_required()
     def delete(self, id):
         user = User.query.get_or_404(id)
         db.session.delete(user)
         db.session.commit()
         return {'message': 'User deleted'}, 204
-    
-    @jwt_required()
-    def get(self):
-        users = User.query.all()
-        result = [user.to_dict() for user in users]
-        return make_response(jsonify(result), 200)
 
 class CheckPasswordResource(Resource):
     @jwt_required()
@@ -130,7 +131,8 @@ class CheckPasswordResource(Resource):
         else:
             return {'message': 'Incorrect password'}, 401
 
-api.add_resource(UserResource, '/users', '/users/<int:id>')
+api.add_resource(UserResource, '/users')
+api.add_resource(SpecificUser, '/users/<int:id>')
 api.add_resource(CheckPasswordResource, '/users/<int:id>/check_password')
 
 # UserProfile Resources
@@ -520,6 +522,7 @@ class Posts(Resource):
         data = request.get_json()
         title = data.get('title')
         content = data.get('content')
+        category_id = data.get('category_id')
 
         if not title or not content:
             return make_response(jsonify({'message': 'Bad Request: Missing title or content'}), 400)
@@ -527,7 +530,8 @@ class Posts(Resource):
         new_post = Post(
             title=title,
             content=content,
-            author_id=author_id
+            author_id=author_id,
+            category_id=category_id
         )
         try:
            db.session.add(new_post)
