@@ -118,8 +118,8 @@ Technology enthusiasts want to share knowledge, discuss tech topics, and stay up
 2. **Create a new branch:<br>**
    If working on a feature, or bugfix
    ```sh
-   git chechkout -b FEAT/your-feature-name/your-name
-   git chechkout -b BUGFIX/your-fix/your-name
+   git checkout -b FEAT/your-feature-name/your-name
+   git checkout -b BUGFIX/your-fix/your-name
 3. **Complete and commit your tasks:**
    ```sh
    git add .
