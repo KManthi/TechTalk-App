@@ -7,6 +7,7 @@ from models import db, UserProfile, Rating, Post, User, Notifications, UserFavou
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
+from flask_cors import CORS
 
 load_dotenv()
 
@@ -14,6 +15,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 db.init_app(app)
 migrate = Migrate(app, db)
 api = Api(app)
