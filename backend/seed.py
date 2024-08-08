@@ -109,10 +109,14 @@ def create_notifications(users):
     for user in users:
         num_notifications = fake.random_int(min=0, max=5)
         for _ in range(num_notifications):
+            notification_content = fake.sentence(nb_words=5)
+            if len(notification_content) > 30:
+                notification_content = notification_content[:30]
             notification = Notifications(
                 receiver_id=user.id,
-                content=fake.sentence(),
-                created_at=fake.date_time_between(start_date="-30d", end_date="now")
+                content=notification_content,
+                created_at=fake.date_time_between(start_date="-30d", end_date="now"),
+                read=fake.boolean()
             )
             notifications.append(notification)
     db.session.add_all(notifications)

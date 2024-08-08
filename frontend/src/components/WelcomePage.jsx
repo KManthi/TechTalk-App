@@ -1,31 +1,44 @@
 import React, { useState } from 'react';
 
-
 const WelcomePage = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         if (!username || !password) {
             setErrorMessage('Both fields are required.');
         } else {
-            
-            if (username === 'admin' && password === 'admin') {
-                setErrorMessage('');
+            try {
+                const response = await fetch('https://techtalk-app.onrender.com/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password }),
+                });
+    
+                const data = await response.json();
                 
-                window.location.href = '/dashboard';
-            } else {
-                setErrorMessage('Invalid username or password.');
+                if (response.ok) {
+                    localStorage.setItem('access_token', data.access_token);
+                    setErrorMessage('');
+                    window.location.href = '/profile';
+                } else {
+                    setErrorMessage(data.message || 'An error occurred');
+                }
+            } catch (error) {
+                setErrorMessage('An error occurred while logging in.');
             }
         }
     };
+    
 
     return (
         <div className="welcome-container">
             <div className="welcome-message">
                 <h1>Welcome to TechTalk</h1>
-                <p>A place  where technology enthusiasts can share knowledge, discuss tech topics, and stay updated with the latest trends.</p>
+                <p>A place where technology enthusiasts can share knowledge, discuss tech topics, and stay updated with the latest trends.</p>
             </div>
             <div className="form-container">
                 <input
