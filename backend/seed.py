@@ -67,10 +67,11 @@ def create_tags(num=10):
 def create_posts(users, categories, num=30):
     posts = []
     for _ in range(num):
+        author = choice(users)
         post = Post(
             title=fake.sentence(),
             content=fake.text(max_nb_chars=500),
-            author_id=choice(users).id,
+            author_id=author.id,
             category_id=choice(categories).id,
             created_at=fake.date_time_between(start_date="-30d", end_date="now")
         )

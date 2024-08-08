@@ -7,11 +7,11 @@ export default class WelcomePage extends Component {
     super(props);
 
     this.state = {
-      username: 'johndoe',
-      password: 'johndoe@1234',
+      username: '',
+      password: '',
       errorMessage: '',
       redirectToSignup: false,
-      redirectToProfile: false
+      redirectToHome: false
     };
   }
 
@@ -19,7 +19,7 @@ export default class WelcomePage extends Component {
     // Check for user details in session storage
     const userDetails = JSON.parse(sessionStorage.getItem('userDetails'));
     if (userDetails) {
-      this.setState({ username: userDetails.username, redirectToProfile: true });
+      this.setState({ username: userDetails.username, redirectToHome: true });
     }
 
     // Run the DOM manipulation code
@@ -50,7 +50,7 @@ export default class WelcomePage extends Component {
 
       if (response.ok) {
         sessionStorage.setItem('userDetails', JSON.stringify({ username }));
-        this.setState({ errorMessage: '', redirectToProfile: true });
+        this.setState({ errorMessage: '', redirectToHome: true });
       } else {
         this.setState({ errorMessage: data.message || 'An error occurred' });
       }
@@ -75,8 +75,8 @@ export default class WelcomePage extends Component {
       return <Navigate to="/signup" />;
     }
 
-    if (this.state.redirectToProfile) {
-      return <Navigate to="/profile" />;
+    if (this.state.redirectToHome) {
+      return <Navigate to="/home" />;
     }
 
     return (
@@ -89,10 +89,12 @@ export default class WelcomePage extends Component {
             </button>
             <div className="collapse navbar-collapse" id="navbarsExampleDefault">
               <ul>
-    
-                <li className="btn btn-lg btn_style text-uppercase animate_btn"> <Link className="nav-link" to="/">Home</Link></li>
-                <li className="btn btn-lg btn_style text-uppercase animate_btn"> <Link className="nav-link" to="#">Features</Link></li>
-                
+                <li className="btn btn-lg btn_style text-uppercase animate_btn">
+                  <Link className="nav-link" to="/">Home</Link>
+                </li>
+                <li className="btn btn-lg btn_style text-uppercase animate_btn">
+                  <Link className="nav-link" to="#">Features</Link>
+                </li>
               </ul>
               <span className="button-container">
                 <button className="btn_signup" onClick={this.handleSignupRedirect}>Sign Up</button>
@@ -111,26 +113,26 @@ export default class WelcomePage extends Component {
           </div>
 
           <div className="container">
-            <div >
-            <form  onSubmit={this.handleLogin} className="form-signin">
-              <h2 className="form-signin-heading">Please sign in</h2>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Username"
-                required
-                onChange={(e) => this.setState({ username: e.target.value })}
-              />
-              <input
-                type="password"
-                className="form-control"
-                placeholder="Password"
-                required
-                onChange={(e) => this.setState({ password: e.target.value })}
-              />
-              {this.state.errorMessage && <div className="error-message">{this.state.errorMessage}</div>}
-              <button className="btn btn-lg btn-primary btn-block" type="submit">Login</button>
-            </form>
+            <div>
+              <form onSubmit={this.handleLogin} className="form-signin">
+                <h2 className="form-signin-heading">Please sign in</h2>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Username"
+                  required
+                  onChange={(e) => this.setState({ username: e.target.value })}
+                />
+                <input
+                  type="password"
+                  className="form-control"
+                  placeholder="Password"
+                  required
+                  onChange={(e) => this.setState({ password: e.target.value })}
+                />
+                {this.state.errorMessage && <div className="error-message">{this.state.errorMessage}</div>}
+                <button className="btn btn-lg btn-primary btn-block" type="submit">Login</button>
+              </form>
             </div>
           </div>
         </main>
