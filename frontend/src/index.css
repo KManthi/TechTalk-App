@@ -12,6 +12,7 @@ body {
     max-width: 1260px;
     margin: auto;
     padding: 20px;
+    
   }
   
   .navbar {
@@ -163,6 +164,7 @@ body {
     max-width: 330px;
     padding: 15px;
     margin: auto;
+    background-color: #bdd2de;
   }
   
   .form-signin .checkbox {
