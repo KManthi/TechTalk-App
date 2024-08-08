@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { Link, Navigate } from "react-router-dom";
 import "../index.css";
+import axios from 'axios';
 
 export default class WelcomePage extends Component {
   constructor(props) {
@@ -40,19 +41,13 @@ export default class WelcomePage extends Component {
     }
 
     try {
-      const response = await fetch('https://techtalk-app.onrender.com/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await axios.post('http://localhost:3000/login', { username, password });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (response.status === 200) {
         sessionStorage.setItem('userDetails', JSON.stringify({ username }));
         this.setState({ errorMessage: '', redirectToProfile: true });
       } else {
-        this.setState({ errorMessage: data.message || 'An error occurred' });
+        this.setState({ errorMessage: response.data.message || 'An error occurred' });
       }
     } catch (error) {
       this.setState({ errorMessage: 'An error occurred while logging in.' });
@@ -63,7 +58,7 @@ export default class WelcomePage extends Component {
     e.preventDefault();
     sessionStorage.removeItem('userDetails');
     this.setState({ username: '' });
-    window.location.href = '/signin';
+    this.props.navigate('/signin'); // Use navigate for redirection
   };
 
   handleSignupRedirect = () => {
@@ -88,12 +83,7 @@ export default class WelcomePage extends Component {
               <span className="navbar-toggler-icon"></span>
             </button>
             <div className="collapse navbar-collapse" id="navbarsExampleDefault">
-              <ul>
-    
-                <li className="btn btn-lg btn_style text-uppercase animate_btn"> <Link className="nav-link" to="/">Home</Link></li>
-                <li className="btn btn-lg btn_style text-uppercase animate_btn"> <Link className="nav-link" to="#">Features</Link></li>
-                
-              </ul>
+              {/* home features */}
               <span className="button-container">
                 <button className="btn_signup" onClick={this.handleSignupRedirect}>Sign Up</button>
               </span>
@@ -111,26 +101,26 @@ export default class WelcomePage extends Component {
           </div>
 
           <div className="container">
-            <div >
-            <form  onSubmit={this.handleLogin} className="form-signin">
-              <h2 className="form-signin-heading">Please sign in</h2>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Username"
-                required
-                onChange={(e) => this.setState({ username: e.target.value })}
-              />
-              <input
-                type="password"
-                className="form-control"
-                placeholder="Password"
-                required
-                onChange={(e) => this.setState({ password: e.target.value })}
-              />
-              {this.state.errorMessage && <div className="error-message">{this.state.errorMessage}</div>}
-              <button className="btn btn-lg btn-primary btn-block" type="submit">Login</button>
-            </form>
+            <div>
+              <form onSubmit={this.handleLogin} className="form-signin">
+                <h2 className="form-signin-heading">Please sign in</h2>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Username"
+                  required
+                  onChange={(e) => this.setState({ username: e.target.value })}
+                />
+                <input
+                  type="password"
+                  className="form-control"
+                  placeholder="Password"
+                  required
+                  onChange={(e) => this.setState({ password: e.target.value })}
+                />
+                {this.state.errorMessage && <div className="error-message">{this.state.errorMessage}</div>}
+                <button className="btn btn-lg btn-primary btn-block" type="submit">Login</button>
+              </form>
             </div>
           </div>
         </main>

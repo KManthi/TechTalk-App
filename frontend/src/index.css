@@ -259,8 +259,8 @@ body {
   /* button styles */
   .btn_style {
     font-size: 25px;
-    width: 10%;
-    border-radius: 0;
+    width: 30%;
+    border-radius: 30px;
     border: none !important;
     color: #fff; /* Default text color */
     padding: 15px 25px;
@@ -268,7 +268,7 @@ body {
     font-weight: 600;
     margin:20px;
     letter-spacing: 2px;
-    background-color: #1586c8; /* Default background color */
+    background-color: #24613e; /* Default background color */
     position: relative; /* Required for positioning pseudo-elements */
     overflow: hidden; /* Ensure that pseudo-elements don't overflow */
     transition: color 0.3s ease-in-out; /* Transition for text color */
@@ -279,6 +279,26 @@ body {
    
 }
 
+.back-home {
+  font-size: 20px;
+  width: 10%;
+  border-radius: 30px;
+  border: none !important;
+  color: #fff; /* Default text color */
+  padding: 15px 25px;
+  margin-top: 25px;
+  font-weight: 600;
+  margin:20px;
+  letter-spacing: 2px;
+  background-color: #438cd5; /* Default background color */
+  position: relative; /* Required for positioning pseudo-elements */
+  overflow: hidden; /* Ensure that pseudo-elements don't overflow */
+  transition: color 0.3s ease-in-out; /* Transition for text color */
+  left:0;
+  text-align: center;
+  text-decoration: none; /* Remove underline from link */
+  display: inline-block; /* Ensure buttons align properly */
+}
 .animate_btn {
     position: relative;
     z-index: 1;
@@ -291,7 +311,7 @@ body {
     height: 100%;
     top: 0;
     left: 0;
-    background-color: #040c0c; /* Background color to transition to */
+    background-color: #83bbe2; /* Background color to transition to */
     transform: translateX(-100%);
     transition: transform 0.3s ease-in-out; /* Transition for the sliding effect */
     z-index: -1; /* Ensure it stays behind the text */
@@ -395,3 +415,122 @@ body {
     cursor: not-allowed; /* Change cursor to indicate disabled */
 }
 
+/* settings css */
+
+
+
+/* General Styles */
+.full-container {
+  background-image: url(src/background/dark-coronation-blue-abstract-creative-background-design_851755-183776.avif);
+}
+.settings {
+  padding: 10px;
+  max-width: 800px;
+  margin: auto;
+  font-family: Arial, sans-serif;
+  background-color:#000;
+}
+
+.settings h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color:#fff;
+  font-size:35px ;
+  
+}
+
+/* Section Styles */
+.notification-settings,
+.appearance-settings,
+.content-preferences {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+.notification-settings:hover,
+.appearance-settings:hover,
+.content-preferences:hover {
+  box-shadow: 9px 6px 12px rgba(0, 0, 0, 0.2);
+  background-color: #ffffff;
+}
+
+/* Notification Settings */
+.notification-settings h2,
+.appearance-settings h2,
+.content-preferences h2 {
+  font-size: 1.95rem;
+  margin-bottom: 15px;
+}
+
+.notification-customization,
+.quiet-hours,
+.content-categories {
+  margin-top: 20px;
+}
+
+.notification-settings label,
+.appearance-settings label,
+.content-preferences label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+  transition: color 0.3s ease;
+}
+
+.notification-settings input[type="checkbox"],
+.appearance-settings input[type="radio"],
+.content-preferences input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+input[type="time"] {
+  margin-left: 10px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Appearance Settings */
+.appearance-settings label {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.appearance-settings input[type="radio"] {
+  margin-right: 5px;
+}
+
+/* Content Preferences */
+.content-categories {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.content-categories label {
+  width: 50%;
+  margin-bottom: 10px;
+}
+
+.content-categories input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.settings {
+  animation: fadeIn 0.9s ease-in-out;
+}
