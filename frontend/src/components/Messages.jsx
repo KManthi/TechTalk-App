@@ -5,7 +5,6 @@ const Messages = ({ messages, onReply }) => {
 
   const handleOpenMessage = (message) => {
     setSelectedMessage(message);
-    // Mark the message as read
     message.read = true;
   };
 
