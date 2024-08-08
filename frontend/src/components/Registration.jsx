@@ -50,7 +50,6 @@ function Register() {
       const response = await axios.post('https://techtalk-app.onrender.com/register', formData);
       setSuccess('Account created successfully!');
       setError('');
-      // Redirect to login page after successful registration
       history.push('/login');
     } catch (err) {
       setError('Failed to create account. Please try again.');
