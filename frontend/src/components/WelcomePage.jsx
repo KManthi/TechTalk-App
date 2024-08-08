@@ -24,8 +24,8 @@ const WelcomePage = () => {
     return (
         <div className="welcome-container">
             <div className="welcome-message">
-                <h1>Welcome to [App Name]</h1>
-                <p>Your one-stop solution for [brief description of features/benefits].</p>
+                <h1>Welcome to TechTalk</h1>
+                <p>A place  where technology enthusiasts can share knowledge, discuss tech topics, and stay updated with the latest trends.</p>
             </div>
             <div className="form-container">
                 <input
