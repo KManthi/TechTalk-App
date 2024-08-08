@@ -57,7 +57,7 @@ body {
 
 /* Repeat the animation indefinitely */
 .jumbotron .display-3 span {
-    animation: fadeInUp 8s forwards;
+    animation: fadeInUp 6s forwards;
     animation-iteration-count: infinite; /* Repeat indefinitely */
 }
 
@@ -87,7 +87,7 @@ body {
   
   /* Text in Jumbotron */
   .jumbotron p {
-    font-size: 1.25rem;
+    font-size: 1.95rem;
   }
 
   
