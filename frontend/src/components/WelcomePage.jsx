@@ -31,28 +31,28 @@ export default class WelcomePage extends Component {
     }
   }
 
-  handleLogin = async (e) => {
-    e.preventDefault();
-    const { username, password } = this.state;
+  // handleLogin = async (e) => {
+  //   e.preventDefault();
+  //   const { username, password } = this.state;
 
-    if (!username || !password) {
-      this.setState({ errorMessage: 'Both fields are required.' });
-      return;
-    }
+  //   if (!username || !password) {
+  //     this.setState({ errorMessage: 'Both fields are required.' });
+  //     return;
+  //   }
 
-    try {
-      const response = await axios.post('http://localhost:5555/login', { username, password });
+  //   try {
+  //     const response = await axios.post('http://localhost:5555/login', { username, password });
 
-      if (response.status === 200) {
-        sessionStorage.setItem('userDetails', JSON.stringify({ username }));
-        this.setState({ errorMessage: '', redirectToProfile: true });
-      } else {
-        this.setState({ errorMessage: response.data.message || 'An error occurred' });
-      }
-    } catch (error) {
-      this.setState({ errorMessage: 'An error occurred while logging in.' });
-    }
-  };
+  //     if (response.status === 200) {
+  //       sessionStorage.setItem('userDetails', JSON.stringify({ username }));
+  //       this.setState({ errorMessage: '', redirectToProfile: true });
+  //     } else {
+  //       this.setState({ errorMessage: response.data.message || 'An error occurred' });
+  //     }
+  //   } catch (error) {
+  //     this.setState({ errorMessage: 'An error occurred while logging in.' });
+  //   }
+  // };
 
   handleLogout = (e) => {
     e.preventDefault();
