@@ -41,7 +41,7 @@ export default class WelcomePage extends Component {
     }
 
     try {
-      const response = await axios.post('http://localhost:3000/login', { username, password });
+      const response = await axios.post('http://localhost:5555/login', { username, password });
 
       if (response.status === 200) {
         sessionStorage.setItem('userDetails', JSON.stringify({ username }));

@@ -11,6 +11,7 @@ gunicorn = "*"
 python-dotenv = "*"
 psycopg2-binary = "*"
 flask-cors = "*"
+flask-sqlalchemy = "*"
 
 [dev-packages]
 
