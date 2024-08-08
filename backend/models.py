@@ -3,6 +3,20 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from cryptography.fernet import Fernet
+from sqlalchemy.ext.mutable import MutableDict
+from sqlalchemy.types import JSON
+from enum import Enum
+from sqlalchemy import Enum as SqlEnum
+
+key = Fernet.generate_key()
+cipher_suite = Fernet(key)
+
+class RatingStatus(Enum):
+    LIKE = "like"
+    DISLIKE = "dislike"
+    NEUTRAL = "neutral"
+
 
 metadata = MetaData(
     naming_convention={
@@ -21,13 +35,20 @@ post_tags = db.Table('post_tags',
     db.Column('tag_id', db.Integer, db.ForeignKey('tags.id'), primary_key=True)
 )
 
+followers = db.Table('followers',
+    db.Column('follower_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
+    db.Column('followed_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
+    db.Column('created_at', db.DateTime, default=datetime.utcnow),
+    db.UniqueConstraint('follower_id', 'followed_id', name='uix_follower_followed')
+)
+
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
-    profile_pic = db.Column(db.String(256), nullable=True)
+    username = db.Column(db.String(255), unique=True, nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    profile_pic = db.Column(db.String(255), nullable=True)
     followers_count = db.Column(db.Integer, default=0)
     following_count = db.Column(db.Integer, default=0)
     is_admin = db.Column(db.Boolean, default=False)
@@ -52,11 +73,11 @@ class User(db.Model):
 class UserProfile(db.Model):
     __tablename__ = 'user_profiles'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
-    bio = db.Column(db.Text)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    bio = db.Column(db.String(200))
     social_links = db.Column(db.String(255))
 
-    user = db.relationship('User', backref=db.backref('profile', uselist=False))
+    user = db.relationship('User', backref='profile')
 
     def __repr__(self):
         return f'<UserProfile {self.user_id}>'
@@ -74,7 +95,7 @@ class Rating(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    status = db.Column(db.String, nullable=False)
+    status = db.Column(SqlEnum(RatingStatus), nullable=False)
 
     def __repr__(self):
         return f'<Rating {self.id}>'
@@ -84,14 +105,14 @@ class Rating(db.Model):
             'id': self.id,
             'post_id': self.post_id,
             'user_id': self.user_id,
-            'status': self.status
+            'status': self.status.name 
         }
 
 class Notifications(db.Model):
     __tablename__ = 'notifications'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     content = db.Column(db.String(30))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     read = db.Column(db.Boolean, default=False)
@@ -102,7 +123,7 @@ class Notifications(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'user_id': self.user_id,
+            'user_id': self.receiver_id,
             'content': self.content,
             'created_at': self.created_at,
             'read': self.read
@@ -111,7 +132,7 @@ class Notifications(db.Model):
 class Post(db.Model):
     __tablename__ = 'posts'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
     title = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
@@ -127,7 +148,7 @@ class Post(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'user_id': self.user_id,
+            'author_id': self.user_id,
             'category_id': self.category_id,
             'title': self.title,
             'content': self.content,
@@ -149,32 +170,10 @@ class Category(db.Model):
             'name': self.name
         }
 
-class Followers(db.Model):
-    __tablename__ = 'followers'
-    id = db.Column(db.Integer, primary_key=True)
-    follower_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    followed_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    follower = db.relationship('User', foreign_keys=[follower_id], backref=db.backref('following', lazy='dynamic'))
-    followed = db.relationship('User', foreign_keys=[followed_id], backref=db.backref('followers', lazy='dynamic'))
-
-    def __repr__(self):
-        return f'<Follower {self.follower_id} following {self.followed_id}>'
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'follower_id': self.follower_id,
-            'followed_id': self.followed_id,
-            'created_at': self.created_at
-        }
-
 class Settings(db.Model):
     __tablename__ = 'settings'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    preferences = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, primary_key=True)
+    preferences = db.Column(MutableDict.as_mutable(JSON), nullable=False)  
 
     user = db.relationship('User', backref=db.backref('settings', lazy=True))
 
@@ -183,7 +182,6 @@ class Settings(db.Model):
     
     def to_dict(self):
         return {
-            'id': self.id,
             'user_id': self.user_id,
             'preferences': self.preferences
         }
@@ -260,15 +258,22 @@ class Messages(db.Model):
 
     def __repr__(self):
         return f'<Message {self.id}>'
-    
+
     def to_dict(self):
+        decrypted_content = cipher_suite.decrypt(self.content.encode()).decode()
         return {
             'id': self.id,
             'sender_id': self.sender_id,
             'recipient_id': self.recipient_id,
-            'content': self.content,
+            'content': decrypted_content,
             'created_at': self.created_at
         }
+
+    def encrypt_content(self, content):
+        self.content = cipher_suite.encrypt(content.encode()).decode()
+
+    def set_content(self, content):
+        self.encrypt_content(content)
 
 class Attachment(db.Model):
     __tablename__ = 'attachments'

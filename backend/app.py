@@ -2,26 +2,62 @@ import os
 from flask import Flask, request, make_response, jsonify
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity
-from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites, Category, Followers, Settings, Attachment, Tag, Messages, Comment
+from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token, get_jwt
+from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites, Category, followers, Settings, Attachment, Tag, Messages, Comment
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
+from flask_cors import CORS
 
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///techtalk.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 db.init_app(app)
 migrate = Migrate(app, db)
 api = Api(app)
 jwt = JWTManager(app)
-UPLOAD_FOLDER = 'backend/upload_folder'
+UPLOAD_FOLDER = 'upload_folder'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'docx'}
 
+
+blacklist = set()
+
+@jwt.token_in_blocklist_loader
+def check_if_token_in_blacklist(jwt_header, jwt_payload):
+    jti = jwt_payload['jti']
+    return jti in blacklist
+
+# Login and Logout Routes
 @app.route('/')
 def index():
     return 'Welcome to the Tech Talk API!'
 
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.json.get('username')
+    password = request.json.get('password')
+    if not username or not password:
+        return {'message': 'Missing username or password'}, 400
+    
+    user = User.query.filter_by(username=username).first()
+    if user and user.check_password(password):
+        access_token = create_access_token(identity=user.id)
+        return {'access_token': access_token}, 200
+    else:
+        return {'message': 'Invalid credentials'}, 401
+
+@app.route('/logout', methods=['DELETE'])
+@jwt_required()
+def logout():
+    jti = get_jwt()['jti']
+    blacklist.add(jti)
+    return {'message': 'Logged out successfully'}, 200
+
+# User Resources
 class UserResource(Resource):
     def post(self):
         data = request.get_json()
@@ -41,11 +77,20 @@ class UserResource(Resource):
         db.session.add(user)
         db.session.commit()
         return user.to_dict(), 201
-
+    
+    @jwt_required()
+    def get(self):
+        users = User.query.all()
+        result = [user.to_dict() for user in users]
+        return make_response(jsonify(result), 200)
+    
+class SpecificUser(Resource):
+    @jwt_required()
     def get(self, id):
         user = User.query.get_or_404(id)
         return user.to_dict()
-
+    
+    @jwt_required()
     def put(self, id):
         user = User.query.get_or_404(id)
         data = request.get_json()
@@ -67,7 +112,8 @@ class UserResource(Resource):
 
         db.session.commit()
         return user.to_dict()
-
+    
+    @jwt_required()
     def delete(self, id):
         user = User.query.get_or_404(id)
         db.session.delete(user)
@@ -75,6 +121,7 @@ class UserResource(Resource):
         return {'message': 'User deleted'}, 204
 
 class CheckPasswordResource(Resource):
+    @jwt_required()
     def post(self, id):
         data = request.get_json()
         if not data or 'password' not in data:
@@ -86,16 +133,19 @@ class CheckPasswordResource(Resource):
         else:
             return {'message': 'Incorrect password'}, 401
 
-api.add_resource(UserResource, '/users', '/users/<int:id>')
+api.add_resource(UserResource, '/users')
+api.add_resource(SpecificUser, '/users/<int:id>')
 api.add_resource(CheckPasswordResource, '/users/<int:id>/check_password')
 
 # UserProfile Resources
 class UserProfiles(Resource):
+    @jwt_required()
     def get(self):
         user_profiles = UserProfile.query.all()
         result = [up.to_dict() for up in user_profiles]
         return make_response(jsonify(result), 200)
     
+    @jwt_required()
     def post(self):
         data = request.get_json()
         if not data or 'user_id' not in data:
@@ -115,6 +165,7 @@ class UserProfiles(Resource):
             return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
     
 class UserProfileByID(Resource):
+    @jwt_required()
     def get(self, id):
         user_profile = UserProfile.query.filter_by(id=id).first()
         if not user_profile:
@@ -124,6 +175,7 @@ class UserProfileByID(Resource):
         }
         return make_response(jsonify(response), 200)
     
+    @jwt_required()
     def put(self, id):
         data = request.get_json()
         user_profile = UserProfile.query.filter_by(id=id).first()
@@ -141,6 +193,7 @@ class UserProfileByID(Resource):
         db.session.commit()
         return make_response(jsonify({'message': 'User profile updated'}), 200)
     
+    @jwt_required()
     def delete(self, id):
         user_profile = UserProfile.query.filter_by(id=id).first()
         if not user_profile:
@@ -153,7 +206,11 @@ class UserProfileByID(Resource):
         except Exception as e:
             db.session.rollback()
             return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
+        
+api.add_resource(UserProfiles, '/userprofiles')
+api.add_resource(UserProfileByID, '/userprofiles/<int:id>')
 
+# Ratings resources
 class Ratings(Resource):
     @jwt_required()
     def post(self):
@@ -187,10 +244,10 @@ class Ratings(Resource):
             db.session.rollback()
             return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
         
-class RatingByID(Resource):
+class RatingByPost(Resource):
     @jwt_required()
-    def get(self, id):
-        rating = Rating.query.filter_by(id=id).first()
+    def get(self, post_id, id):
+        rating = Rating.query.filter_by(post_id=post_id, id=id).first()
         if not rating:
             return make_response(jsonify({'message': 'Rating not found'}), 404)
                 
@@ -198,13 +255,13 @@ class RatingByID(Resource):
         return make_response(jsonify(response), 200)
     
     @jwt_required()
-    def put(self, id):
+    def put(self, post_id, id):
         data = request.get_json()
         status = data.get('status')
         if status not in ['like', 'dislike']:
             return make_response(jsonify({'message': 'Bad Request: Invalid status'}), 400)
 
-        rating = Rating.query.filter_by(id=id).first()
+        rating = Rating.query.filter_by(post_id=post_id, id=id).first()
         if not rating:
             return make_response(jsonify({'message': 'Rating not found'}), 404)
 
@@ -218,8 +275,8 @@ class RatingByID(Resource):
         return make_response(jsonify({'message': 'Rating updated', 'rating': rating.to_dict()}), 200)
     
     @jwt_required()
-    def delete(self, id):
-        rating = Rating.query.filter_by(id=id).first()
+    def delete(self, post_id, id):
+        rating = Rating.query.filter_by(post_id=post_id, id=id).first()
         if not rating:
             return make_response(jsonify({'message': 'Rating not found'}), 404)
         
@@ -244,6 +301,11 @@ class RatingsForPost(Resource):
         result = [rating.to_dict() for rating in ratings]
         return make_response(jsonify(result), 200)
 
+api.add_resource(Ratings, '/ratings')
+api.add_resource(RatingByPost, '/posts/<int:post_id>/ratings/<int:id>')
+api.add_resource(RatingsForPost, '/posts/<int:post_id>/ratings')
+
+# PosTags Resources
 class PostTags(Resource):
     @jwt_required()
     def post(self, post_id):
@@ -256,6 +318,11 @@ class PostTags(Resource):
 
         if tag in post.tags:
             return make_response(jsonify({'message': 'Tag already exists for this post'}), 400)
+        
+        user_id = get_jwt_identity()
+        user = User.query.get_or_404(user_id)
+        if not user.is_admin:
+            return make_response(jsonify({'message': 'Forbidden: You are not authorized to add tags to this post'}), 403)
         
         try:
             post.tags.append(tag)
@@ -273,6 +340,11 @@ class PostTags(Resource):
         if tag not in post.tags:
             return make_response(jsonify({'message': 'Tag does not exist for this post'}), 404)
         
+        user_id = get_jwt_identity()
+        user = User.query.get_or_404(user_id)
+        if not user.is_admin:
+            return make_response(jsonify({'message': 'Forbidden: You are not authorized to remove tags from this post'}), 403)
+
         try:
             post.tags.remove(tag)
             db.session.commit()
@@ -291,23 +363,27 @@ class PostsByTag(Resource):
         tag = Tag.query.get_or_404(tag_id)
         posts = [post.to_dict() for post in tag.posts]
         return make_response(jsonify(posts), 200)
-    
-class Notifications(Resource):
+
+api.add_resource(PostTags, '/posts/<int:post_id>/tags', '/posts/<int:post_id>/tags/<int:tag_id>')
+api.add_resource(PostsByTag, '/tags/<int:tag_id>/posts')
+
+#Notifications Resources
+class NotificationsResource(Resource):
     @jwt_required()
     def post(self):
         user_id = get_jwt_identity()
         data = request.get_json()
         content = data.get('content')
-        receiver_user_id = data.get('user_id')
+        receiver_id = data.get('receiver_id')
 
-        if not content or not receiver_user_id:
+        if not content or not receiver_id:
             return make_response(jsonify({'message': 'Bad Request: Missing content or user_id'}), 400)
         
-        receiver_user = User.query.get(receiver_user_id)
+        receiver_user = User.query.get(receiver_id)
         if not receiver_user:
             return make_response(jsonify({'message': 'User not found'}), 404)
         
-        new_notif = Notifications(user_id=receiver_user_id, content=content)
+        new_notif = Notifications(user_id=receiver_id, content=content)
 
         try:
             db.session.add(new_notif)
@@ -320,7 +396,7 @@ class Notifications(Resource):
     @jwt_required()
     def get(self):
         user_id = get_jwt_identity()
-        notifications = Notifications.query.filter_by(user_id=user_id).all()
+        notifications = Notifications.query.filter_by(receiver_id=user_id).all()
         
         if not notifications:
             return make_response(jsonify({'message': 'No notifications found'}), 404)
@@ -329,7 +405,6 @@ class Notifications(Resource):
         return make_response(jsonify(result), 200)
 
 class NotificationByID(Resource):
-
     @jwt_required()
     def put(self, id):
         data = request.get_json()
@@ -339,7 +414,7 @@ class NotificationByID(Resource):
             return make_response(jsonify({'message': 'Bad Request: Invalid read parameter'}), 400)
         
         user_id = get_jwt_identity()
-        notification = Notifications.query.filter_by(id=id, user_id=user_id).first_or_404()
+        notification = Notifications.query.filter_by(id=id, receiver_id=user_id).first_or_404()
 
         try:
             notification.read = read_status
@@ -352,7 +427,7 @@ class NotificationByID(Resource):
     @jwt_required()
     def get(self, id):
         user_id = get_jwt_identity()
-        notification = Notifications.query.filter_by(id=id, user_id=user_id).first_or_404()
+        notification = Notifications.query.filter_by(id=id, receiver_id=user_id).first_or_404()
 
         response = {'notification': notification.to_dict()}
         return make_response(jsonify(response), 200)
@@ -360,7 +435,7 @@ class NotificationByID(Resource):
     @jwt_required()
     def delete(self, id):
         user_id = get_jwt_identity()
-        notification = Notifications.query.filter_by(id=id, user_id=user_id).first_or_404()
+        notification = Notifications.query.filter_by(id=id, receiver_id=user_id).first_or_404()
 
         try:
             db.session.delete(notification)
@@ -370,7 +445,11 @@ class NotificationByID(Resource):
             db.session.rollback()
             return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
 
-class UserFavourites(Resource):
+api.add_resource(NotificationsResource, '/notifications', '/users/me/notifications')
+api.add_resource(NotificationByID, '/notifications/<int:id>')
+
+# User Favourites Resources
+class UserFavouritesResource(Resource):
     @jwt_required()
     def post(self):
         user_id = get_jwt_identity()
@@ -415,9 +494,8 @@ class UserFavourites(Resource):
             return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
         
     @jwt_required()
-    def get(self):
+    def get(self, post_id=None):
         user_id = get_jwt_identity()
-        post_id = request.args.get('post_id', None)
 
         if post_id:
             favourite_exists = UserFavourites.query.filter_by(user_id=user_id, post_id=post_id).first()
@@ -431,17 +509,7 @@ class UserFavourites(Resource):
         result = [{'post_id': favourite.post_id} for favourite in favourites]
         return make_response(jsonify(result), 200)
 
-api.add_resource(UserProfiles, '/userprofiles')
-api.add_resource(UserProfileByID, '/userprofiles/<int:id>')
-api.add_resource(Ratings, '/ratings')
-api.add_resource(RatingByID, '/ratings/<int:id>')
-api.add_resource(RatingsForPost, '/posts/<int:post_id>/ratings')
-api.add_resource(PostTags, '/posts/<int:post_id>/tags', '/posts/<int:post_id>/tags/<int:tag_id>')
-api.add_resource(PostsByTag, '/tags/<int:tag_id>/posts')
-api.add_resource(Notifications, '/notifications', '/users/me/notifications')
-api.add_resource(NotificationByID, '/notifications/<int:id>')
-api.add_resource(UserFavourites, '/users/me/favourites', '/users/me/favourites/<int:post_id>', '/users/me/favourites?post_id=<post_id>')
-
+api.add_resource(UserFavouritesResource, '/users/me/favourites', '/users/me/favourites/<int:post_id>', '/users/me/favourites?post_id=<post_id>')
 
 # Posts Resources
 class Posts(Resource):
@@ -450,17 +518,31 @@ class Posts(Resource):
         result = [post.to_dict() for post in posts]
         return make_response(jsonify(result), 200)
     
+    @jwt_required()
     def post(self):
+        author_id = get_jwt_identity()
         data = request.get_json()
+        title = data.get('title')
+        content = data.get('content')
+        category_id = data.get('category_id')
+
+        if not title or not content:
+            return make_response(jsonify({'message': 'Bad Request: Missing title or content'}), 400)
+
         new_post = Post(
-            title=data['title'],
-            content=data['content'],
-            user_id=data['user_id']
+            title=title,
+            content=content,
+            author_id=author_id,
+            category_id=category_id
         )
-        db.session.add(new_post)
-        db.session.commit()
-        return make_response(jsonify({'message': 'Post created successfully'}), 201)
-    
+        try:
+           db.session.add(new_post)
+           db.session.commit()
+           return make_response(jsonify({'message': 'Post created successfully'}), 201)
+        except Exception as e:
+            db.session.rollback()
+            return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
+            
 class PostByID(Resource):
     def get(self, id):
         post = Post.query.filter_by(id=id).first()
@@ -468,25 +550,49 @@ class PostByID(Resource):
             return make_response(jsonify({'message': 'Post not found'}), 404)
         return make_response(jsonify(post.to_dict()), 200)
     
+    @jwt_required()
     def put(self, id):
+        author_id = get_jwt_identity()
         data = request.get_json()
         post = Post.query.filter_by(id=id).first()
         if not post:
             return make_response(jsonify({'message': 'Post not found'}), 404)
         
-        post.title = data['title']
-        post.content = data['content']
-        db.session.commit()
-        return make_response(jsonify({'message': 'Post updated successfully'}), 200)
+        if post.author_id != author_id:
+            return make_response(jsonify({'message': 'Unauthorized'}), 403)
+        
+        title = data.get('title')
+        content = data.get('content')
+        
+        if not title or not content:
+            return make_response(jsonify({'message': 'Bad Request: Missing title or content'}), 400)
+        
+        post.title = title
+        post.content = content
+        try:
+            db.session.commit()
+            return make_response(jsonify({'message': 'Post updated successfully'}), 200)
+        except Exception as e:
+            db.session.rollback()
+            return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
     
+    @jwt_required()
     def delete(self, id):
+        author_id = get_jwt_identity()
         post = Post.query.filter_by(id=id).first()
         if not post:
             return make_response(jsonify({'message': 'Post not found'}), 404)
         
-        db.session.delete(post)
-        db.session.commit()
-        return make_response(jsonify({'message': 'Post deleted successfully'}), 200)
+        if post.author_id != author_id:
+            return make_response(jsonify({'message': 'Unauthorized'}), 403)
+        
+        try:
+            db.session.delete(post)
+            db.session.commit()
+            return make_response(jsonify({'message': 'Post deleted successfully'}), 200)
+        except Exception as e:
+            db.session.rollback()
+            return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
 
 api.add_resource(Posts, '/posts')
 api.add_resource(PostByID, '/posts/<int:id>')
@@ -498,7 +604,12 @@ class Categories(Resource):
         result = [category.to_dict() for category in categories]
         return make_response(jsonify(result), 200)
     
+    @jwt_required()
     def post(self):
+        user_id = get_jwt_identity()
+        if not is_admin(user_id):
+            return make_response(jsonify({'message': 'Unauthorized'}), 403)
+        
         data = request.get_json()
         new_category = Category(
             name=data['name'],
@@ -515,7 +626,12 @@ class CategoryByID(Resource):
             return make_response(jsonify({'message': 'Category not found'}), 404)
         return make_response(jsonify(category.to_dict()), 200)
     
+    @jwt_required()
     def put(self, id):
+        user_id = get_jwt_identity()
+        if not is_admin(user_id):
+            return make_response(jsonify({'message': 'Unauthorized'}), 403)
+        
         data = request.get_json()
         category = Category.query.filter_by(id=id).first()
         if not category:
@@ -526,7 +642,12 @@ class CategoryByID(Resource):
         db.session.commit()
         return make_response(jsonify({'message': 'Category updated successfully'}), 200)
     
+    @jwt_required()
     def delete(self, id):
+        user_id = get_jwt_identity()
+        if not is_admin(user_id):
+            return make_response(jsonify({'message': 'Unauthorized'}), 403)
+        
         category = Category.query.filter_by(id=id).first()
         if not category:
             return make_response(jsonify({'message': 'Category not found'}), 404)
@@ -539,43 +660,136 @@ api.add_resource(Categories, '/categories')
 api.add_resource(CategoryByID, '/categories/<int:id>')
 
 # Followers Resources
-class FollowersResource(Resource):
+class FollowResources(Resource):
+    @jwt_required()
     def post(self):
+        user_id = get_jwt_identity()
         data = request.get_json()
-        new_follow = Followers(
-            follower_id=data['follower_id'],
-            followed_id=data['followed_id']
-        )
-        db.session.add(new_follow)
-        db.session.commit()
-        return make_response(jsonify({'message': 'Followed successfully'}), 201)
+        followed_id = data.get('followed_id')
 
-api.add_resource(FollowersResource, '/followers')
+        if not followed_id:
+            return make_response(jsonify({'message': 'Bad Request: Missing followed_id'}), 400)
+        
+        if followed_id == user_id:
+            return make_response(jsonify({'message': 'Cannot follow yourself'}), 400)
+        
+        existing_follow = followers.query.filter_by(follower_id=user_id, followed_id=followed_id).first()
+        if existing_follow:
+            return make_response(jsonify({'message': 'Already following'}), 400)
+        
+        new_follow = followers(follower_id=user_id, followed_id=followed_id)
+        try:
+            db.session.add(new_follow)
+            db.session.commit()
+            return make_response(jsonify({'message': 'Followed successfully'}), 201)
+        except Exception as e:
+            db.session.rollback()
+            return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
+
+    @jwt_required()
+    def delete(self, followed_id):
+        user_id = get_jwt_identity()
+        follow_record = followers.query.filter_by(follower_id=user_id, followed_id=followed_id).first_or_404()
+
+        try:
+            db.session.delete(follow_record)
+            db.session.commit()
+            return make_response(jsonify({'message': 'Unfollowed successfully'}), 200)
+        except Exception as e:
+            db.session.rollback()
+            return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
+
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()
+        followers = followers.query.filter_by(followed_id=user_id).all()
+        result = [{'follower_id': follow.follower_id} for follow in followers]
+        if not result:
+            return make_response(jsonify({'message': 'No followers found'}), 404)
+        return make_response(jsonify(result), 200)
+    
+class UsersFollowing(Resource):
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()
+        following = followers.query.filter_by(follower_id=user_id).all()
+        result = [{'followed_id': follow.followed_id} for follow in following]
+        if not result:
+            return make_response(jsonify({'message': 'Not following any users'}), 404)
+        return make_response(jsonify(result), 200)
+
+class CheckFollowing(Resource):
+    @jwt_required()
+    def get(self, user_id):
+        current_user_id = get_jwt_identity()
+        is_following = followers.query.filter_by(follower_id=current_user_id, followed_id=user_id).first() is not None
+        return make_response(jsonify({'is_following': is_following}), 200)
+
+api.add_resource(FollowResources, '/users/me/follow', '/users/me/follow/<int:followed_id>')
+api.add_resource(UsersFollowing, '/users/me/following')
+api.add_resource(CheckFollowing, '/users/me/following/<int:user_id>')
 
 # Setting Resources
 class SettingsResource(Resource):
-    def post(self):
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()
+        settings = Settings.query.filter_by(user_id=user_id).first()
+        if settings:
+            return make_response(jsonify(settings.to_dict()), 200)
+        else:
+            return make_response(jsonify({'message': 'No settings found'}), 404)
+
+    @jwt_required()
+    def put(self):
+        user_id = get_jwt_identity()
         data = request.get_json()
-        settings = Settings.query.filter_by(user_id=data['user_id']).first()
+        settings = Settings.query.filter_by(user_id=user_id).first()
         if settings:
             settings.preferences = data['preferences']
         else:
-            settings = Settings(user_id=data['user_id'], preferences=data['preferences'])
+            settings = Settings(user_id=user_id, preferences=data['preferences'])
             db.session.add(settings)
         db.session.commit()
         return make_response(jsonify({'message': 'Settings updated successfully'}), 200)
 
-api.add_resource(SettingsResource, '/settings')
+    @jwt_required()
+    def post(self):
+        user_id = get_jwt_identity()
+        data = request.get_json()
+        settings = Settings.query.filter_by(user_id=user_id).first()
+        if settings:
+            return make_response(jsonify({'message': 'Settings already exist, use PUT to update'}), 400)
+        settings = Settings(user_id=user_id, preferences=data['preferences'])
+        db.session.add(settings)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Settings created successfully'}), 201)
+
+    @jwt_required()
+    def delete(self):
+        user_id = get_jwt_identity()
+        settings = Settings.query.filter_by(user_id=user_id).first()
+        if not settings:
+            return make_response(jsonify({'message': 'No settings found'}), 404)
+        db.session.delete(settings)
+        db.session.commit()
+        return make_response(jsonify({'message': 'Settings deleted successfully'}), 200)
+
+api.add_resource(SettingsResource, '/users/me/settings')
 
 # Comment Resources
-
 class CommentResource(Resource):
     @jwt_required()
     def post(self, post_id):
         data = request.get_json()
         user_id = get_jwt_identity()
+        content = data.get('content')
+
+        if not content:
+            return make_response(jsonify({'message': 'Bad Request: Missing content'}), 400)
+
         new_comment = Comment(
-            content=data['content'],
+            content=content,
             user_id=user_id,
             post_id=post_id
         )
@@ -597,7 +811,15 @@ class CommentResource(Resource):
         if not comment:
             return make_response(jsonify({'message': 'Comment not found'}), 404)
         
-        comment.content = data['content']
+        user_id = get_jwt_identity()
+        if comment.user_id != user_id and not is_admin(user_id):
+            return make_response(jsonify({'message': 'Unauthorized'}), 403)
+
+        content = data.get('content')
+        if not content:
+            return make_response(jsonify({'message': 'Bad Request: Missing content'}), 400)
+        
+        comment.content = content
         db.session.commit()
         return make_response(jsonify({'message': 'Comment updated successfully'}), 200)
     
@@ -607,28 +829,36 @@ class CommentResource(Resource):
         if not comment:
             return make_response(jsonify({'message': 'Comment not found'}), 404)
         
+        user_id = get_jwt_identity()
+        if comment.user_id != user_id and not is_admin(user_id):
+            return make_response(jsonify({'message': 'Unauthorized'}), 403)
+
         db.session.delete(comment)
         db.session.commit()
         return make_response(jsonify({'message': 'Comment deleted successfully'}), 200)
     
-class CommmentsListResource(Resource):
+class CommentsListResource(Resource):
     def get(self, post_id):
         comments = Comment.query.filter_by(post_id=post_id).all()
         result = [comment.to_dict() for comment in comments]
         return make_response(jsonify(result), 200)
     
 api.add_resource(CommentResource, '/posts/<int:post_id>/comments/<int:id>')
-api.add_resource(CommmentsListResource, '/posts/<int:post_id>/comments')
+api.add_resource(CommentsListResource, '/posts/<int:post_id>/comments')
 
 # Messages Resources
-
 class MessageResource(Resource):
     @jwt_required()
     def post(self, recipient_id):
         data = request.get_json()
         user_id = get_jwt_identity()
+        content = data.get('content')
+
+        if not content:
+            return make_response(jsonify({'message': 'Bad Request: Missing content'}), 400)
+
         new_message = Messages(
-            content=data['content'],
+            content=content,
             sender_id=user_id,
             recipient_id=recipient_id
         )
@@ -653,10 +883,14 @@ class MessageResource(Resource):
         message = Messages.query.filter_by(id=id).first()
         if not message:
             return make_response(jsonify({'message': 'Message not found'}), 404)
-        if message.sender_id!= user_id:
+        if message.sender_id != user_id:
             return make_response(jsonify({'message': 'Unauthorized'}), 403)
         
-        message.content = data['content']
+        content = data.get('content')
+        if not content:
+            return make_response(jsonify({'message': 'Bad Request: Missing content'}), 400)
+        
+        message.content = content
         db.session.commit()
         return make_response(jsonify({'message': 'Message updated successfully'}), 200)
     
@@ -666,35 +900,43 @@ class MessageResource(Resource):
         message = Messages.query.filter_by(id=id).first()
         if not message:
             return make_response(jsonify({'message': 'Message not found'}), 404)
-        if message.sender_id!= user_id:
+        if message.sender_id != user_id:
             return make_response(jsonify({'message': 'Unauthorized'}), 403)
         
         db.session.delete(message)
         db.session.commit()
         return make_response(jsonify({'message': 'Message deleted successfully'}), 200)
-    
-api.add_resource(MessageResource, '/users/me/messages/<int:id>', '/users/me/messages')
 
-# Tag Resources
+api.add_resource(MessageResource, '/users/me/messages/<int:id>', '/users/me/messages')
 
 def is_admin(user_id):
     user = User.query.filter_by(id=user_id).first()
     return user.is_admin if user else False
 
+# Tag Resources
 class TagResource(Resource):
     @jwt_required()
     def post(self):
         user_id = get_jwt_identity()
         if not is_admin(user_id):
             return make_response(jsonify({'message': 'Unauthorized'}), 403)
+        
         data = request.get_json()
+        if 'name' not in data:
+            return make_response(jsonify({'message': 'Bad Request: Missing name'}), 400)
+        
+        existing_tag = Tag.query.filter_by(name=data['name']).first()
+        if existing_tag:
+            return make_response(jsonify({'message': 'Tag already exists'}), 400)
+        
         new_tag = Tag(name=data['name'])
         db.session.add(new_tag)
         db.session.commit()
         return make_response(jsonify({'message': 'Tag created successfully'}), 201)
     
+    @jwt_required()
     def get(self, id):
-        tag = Tag.query.filter_by(id=id).first()
+        tag = Tag.query.get(id)
         if not tag:
             return make_response(jsonify({'message': 'Tag not found'}), 404)
         return make_response(jsonify(tag.to_dict()), 200)
@@ -704,10 +946,18 @@ class TagResource(Resource):
         user_id = get_jwt_identity()
         if not is_admin(user_id):
             return make_response(jsonify({'message': 'Unauthorized'}), 403)
+        
         data = request.get_json()
-        tag = Tag.query.filter_by(id=id).first()
+        tag = Tag.query.get(id)
         if not tag:
             return make_response(jsonify({'message': 'Tag not found'}), 404)
+        
+        if 'name' not in data:
+            return make_response(jsonify({'message': 'Bad Request: Missing name'}), 400)
+        
+        existing_tag = Tag.query.filter_by(name=data['name']).first()
+        if existing_tag and existing_tag.id != id:
+            return make_response(jsonify({'message': 'Tag name already in use'}), 400)
         
         tag.name = data['name']
         db.session.commit()
@@ -718,7 +968,8 @@ class TagResource(Resource):
         user_id = get_jwt_identity()
         if not is_admin(user_id):
             return make_response(jsonify({'message': 'Unauthorized'}), 403)
-        tag = Tag.query.filter_by(id=id).first()
+        
+        tag = Tag.query.get(id)
         if not tag:
             return make_response(jsonify({'message': 'Tag not found'}), 404)
         
@@ -731,7 +982,6 @@ class TagListResource(Resource):
         tags = Tag.query.all()
         result = [tag.to_dict() for tag in tags]
         return make_response(jsonify(result), 200)
-
 
 api.add_resource(TagResource, '/tags', '/tags/<int:id>')
 api.add_resource(TagListResource, '/tags')
