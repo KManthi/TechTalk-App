@@ -111,7 +111,8 @@ export default class WelcomePage extends Component {
           </div>
 
           <div className="container">
-            <form onSubmit={this.handleLogin} className="form-signin">
+            <div >
+            <form  onSubmit={this.handleLogin} className="form-signin">
               <h2 className="form-signin-heading">Please sign in</h2>
               <input
                 type="text"
@@ -130,6 +131,7 @@ export default class WelcomePage extends Component {
               {this.state.errorMessage && <div className="error-message">{this.state.errorMessage}</div>}
               <button className="btn btn-lg btn-primary btn-block" type="submit">Login</button>
             </form>
+            </div>
           </div>
         </main>
 
