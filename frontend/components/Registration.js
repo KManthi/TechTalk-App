@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useHistory } from 'react-router-dom';
 
-function Signup() {
+function Register() {
   const [formData, setFormData] = useState({
     email: '',
     username: '',
@@ -47,10 +47,11 @@ function Signup() {
     }
 
     try {
-      const response = await axios.post('https://techtalk-app.onrender.com/signup', formData);
+      const response = await axios.post('https://techtalk-app.onrender.com/register', formData);
       setSuccess('Account created successfully!');
       setError('');
-      history.push('/home');
+      // Redirect to login page after successful registration
+      history.push('/login');
     } catch (err) {
       setError('Failed to create account. Please try again.');
       setSuccess('');
@@ -58,8 +59,8 @@ function Signup() {
   };
 
   return (
-    <div className="signup">
-      <h2>Create Account</h2>
+    <div className="register">
+      <h2>Register</h2>
       {error && <p className="error">{error}</p>}
       {success && <p className="success">{success}</p>}
       <form onSubmit={handleSubmit}>
@@ -93,10 +94,10 @@ function Signup() {
             required
           />
         </div>
-        <button type="submit">Create Account</button>
+        <button type="submit">Register</button>
       </form>
     </div>
   );
 }
 
-export default Signup;
+export default Register;
