@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import "../index.css";
 import axios from 'axios';
 
@@ -23,7 +23,7 @@ export default class WelcomePage extends Component {
       this.setState({ username: userDetails.username, redirectToProfile: true });
     }
 
-    // Run the DOM manipulation code
+    // Run the DOM manipulation code (Not recommended in React)
     const textElement = document.getElementById('text');
     if (textElement) {
       const text = textElement.textContent;
@@ -57,8 +57,7 @@ export default class WelcomePage extends Component {
   handleLogout = (e) => {
     e.preventDefault();
     sessionStorage.removeItem('userDetails');
-    this.setState({ username: '' });
-    this.props.navigate('/signin'); // Use navigate for redirection
+    this.setState({ username: '', redirectToSignup: true }); // Redirect to sign-in page
   };
 
   handleSignupRedirect = () => {
@@ -109,6 +108,7 @@ export default class WelcomePage extends Component {
                   className="form-control"
                   placeholder="Username"
                   required
+                  value={this.state.username}
                   onChange={(e) => this.setState({ username: e.target.value })}
                 />
                 <input
@@ -116,6 +116,7 @@ export default class WelcomePage extends Component {
                   className="form-control"
                   placeholder="Password"
                   required
+                  value={this.state.password}
                   onChange={(e) => this.setState({ password: e.target.value })}
                 />
                 {this.state.errorMessage && <div className="error-message">{this.state.errorMessage}</div>}
