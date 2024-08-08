@@ -1,0 +1,395 @@
+/* index.css or welcomePage.css */
+
+/* General Styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+  }
+  
+  .container {
+    max-width: 1260px;
+    margin: auto;
+    padding: 20px;
+  }
+  
+  .navbar {
+    margin-bottom: 20px;
+  }
+  
+  .navbar-brand {
+    font-weight: bold;
+  }
+  
+  /* Jumbotron Styling */
+  .jumbotron {
+    background-color: #c8def3;
+    padding: 40px 20px;
+    border-radius: 0.3rem;
+    margin-bottom: 20px;
+  }
+  
+  /* Animated Text Container */
+  .jumbotron .display-3 {
+    display: inline-block;
+    overflow: hidden; /* Ensure that text doesn't overflow the container */
+    font-size: 4.5rem;
+    font-weight: 300;
+    white-space: nowrap;
+}
+
+.jumbotron .display-3 span {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(20px); /* Start text below */
+    animation: fadeInUp 0.6s forwards;
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Repeat the animation indefinitely */
+.jumbotron .display-3 span {
+    animation: fadeInUp 8s forwards;
+    animation-iteration-count: infinite; /* Repeat indefinitely */
+}
+
+/* Delay Animation for Each Letter */
+.jumbotron .display-3 span:nth-child(1) { animation-delay: 0.3s; }
+.jumbotron .display-3 span:nth-child(2) { animation-delay: 0.5s; }
+.jumbotron .display-3 span:nth-child(3) { animation-delay: 0.7s; }
+.jumbotron .display-3 span:nth-child(4) { animation-delay: 0.9s; }
+.jumbotron .display-3 span:nth-child(5) { animation-delay: 1.0s; }
+.jumbotron .display-3 span:nth-child(6) { animation-delay: 1.2s; }
+.jumbotron .display-3 span:nth-child(7) { animation-delay: 1.4s; }
+.jumbotron .display-3 span:nth-child(8) { animation-delay: 1.6s; }
+.jumbotron .display-3 span:nth-child(9) { animation-delay: 1.8s; }
+.jumbotron .display-3 span:nth-child(10) { animation-delay: 2.0s; }
+.jumbotron .display-3 span:nth-child(11) { animation-delay: 2.1s; }
+.jumbotron .display-3 span:nth-child(12) { animation-delay: 2.2s; }
+.jumbotron .display-3 span:nth-child(13) { animation-delay: 2.3s; }
+.jumbotron .display-3 span:nth-child(14) { animation-delay: 2.4s; }
+.jumbotron .display-3 span:nth-child(15) { animation-delay: 2.5s; }
+.jumbotron .display-3 span:nth-child(16) { animation-delay: 2.6s; }
+.jumbotron .display-3 span:nth-child(17) { animation-delay: 2.7s; }
+.jumbotron .display-3 span:nth-child(18) { animation-delay: 2.8s; }
+.jumbotron .display-3 span:nth-child(19) { animation-delay: 2.9s; }
+.jumbotron .display-3 span:nth-child(20) { animation-delay: 3.0s; }
+
+  /* Continue for each letter or use JavaScript for dynamic delays */
+  
+  /* Text in Jumbotron */
+  .jumbotron p {
+    font-size: 1.25rem;
+  }
+
+  
+  /* Form Styling */
+  .form-signin {
+    max-width: 400px;
+    margin: auto;
+  }
+  
+  .form-signin-heading {
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+  }
+  
+  .form-control {
+    margin-bottom: 10px;
+    padding: 10px;
+  }
+  
+  .error-message {
+    color: #dc3545;
+    margin-bottom: 10px;
+  }
+  
+  /* Button Styling */
+  .btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+  }
+  
+  .btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+  }
+  
+  /* Footer Styling */
+  footer {
+    background-color: #343a40;
+    color: #fff;
+    padding:20px;
+    text-align: center;
+    height: 50px;
+    
+  }
+  
+  footer p {
+    margin: 0;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 767px) {
+    .form-signin {
+      padding: 20px;
+    }
+  
+    .jumbotron {
+      padding: 20px;
+    }
+  }
+  
+  /* Form Sign-in Specific */
+  .form-signin {
+    width: 100%;
+    max-width: 330px;
+    padding: 15px;
+    margin: auto;
+  }
+  
+  .form-signin .checkbox {
+    font-weight: 400;
+  }
+  
+  .form-signin .form-control {
+    position: relative;
+    box-sizing: border-box;
+    height: auto;
+    padding: 10px;
+    font-size: 16px;
+  }
+  
+  .form-signin .form-control:focus {
+    z-index: 2;
+  }
+  
+  .form-signin input[type="email"] {
+    margin-bottom: -1px;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  
+  .form-signin input[type="password"] {
+    margin-bottom: 10px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+  /* General Navbar Styling */
+.navbar {
+    background-color: #343a40; /* Dark background color */
+  }
+  
+  .navbar-brand {
+    font-size: 1.5rem; /* Larger font size for brand */
+    font-weight: bold; /* Bold text for brand */
+    color: #ffffff; /* White text color */
+  }
+  
+  .navbar-brand:hover {
+    color: #d6d6d6; /* Slightly lighter color on hover */
+  }
+  
+  .navbar-toggler {
+    border: none; /* Remove default border */
+  }
+  
+  .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml;base64,..."); /* Custom icon if needed */
+  }
+  
+  .navbar-nav .nav-item {
+    margin-right: 15px; /* Space between nav items */
+  }
+  
+  .nav-link {
+    color: #ffffff; /* White text color */
+    font-size: 1rem; /* Font size for nav links */
+  }
+  
+  .nav-link:hover {
+    color: #d6d6d6; /* Slightly lighter color on hover */
+    text-decoration: underline; /* Underline on hover */
+  }
+  
+  .navbar-text .btn-primary {
+    background-color: #007bff; /* Bootstrap primary color */
+    border-color: #007bff; /* Match button border to background */
+  }
+  
+  .navbar-text .btn-primary:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+    border-color: #004085; /* Darker border shade on hover */
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 767px) {
+    .navbar-nav {
+      margin-top: 15px; /* Space above nav items on mobile */
+    }
+  
+    .navbar-nav .nav-item {
+      margin-right: 0; /* Remove right margin for mobile */
+      margin-bottom: 10px; /* Space below nav items on mobile */
+    }
+  
+    .navbar-text {
+      margin-top: 15px; /* Space above the button on mobile */
+    }
+  }
+  /* button styles */
+  .btn_style {
+    font-size: 25px;
+    width: 10%;
+    border-radius: 0;
+    border: none !important;
+    color: #fff; /* Default text color */
+    padding: 15px 25px;
+    margin-top: 25px;
+    font-weight: 600;
+    margin:20px;
+    letter-spacing: 2px;
+    background-color: #1586c8; /* Default background color */
+    position: relative; /* Required for positioning pseudo-elements */
+    overflow: hidden; /* Ensure that pseudo-elements don't overflow */
+    transition: color 0.3s ease-in-out; /* Transition for text color */
+    left:0;
+    text-align: center;
+    text-decoration: none; /* Remove underline from link */
+    display: inline-block; /* Ensure buttons align properly */
+   
+}
+
+.animate_btn {
+    position: relative;
+    z-index: 1;
+}
+
+.animate_btn::before {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: #040c0c; /* Background color to transition to */
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out; /* Transition for the sliding effect */
+    z-index: -1; /* Ensure it stays behind the text */
+}
+
+.animate_btn:hover::before {
+    transform: translateX(0);
+}
+
+.animate_btn:hover {
+    color: #000; 
+}
+/*sign up styles*/
+/* Container for positioning the button */
+.button-container {
+    position: fixed; /* Fixes the button to the viewport */
+    top: 20px; /* Distance from the top */
+    right: 20px; /* Distance from the right */
+    z-index: 1000; /* Ensures the button is on top of other content */
+}
+
+/* Sign-Up Button Styling */
+.btn_signup {
+    font-size: 16px; /* Font size of the text */
+    border-radius: 5px; /* Rounded corners */
+    border: none; /* No border */
+    color: #fff; /* Text color */
+    padding: 12px 24px; /* Vertical and horizontal padding */
+    font-weight: 700; /* Bold text */
+    letter-spacing: 1px; /* Spacing between letters */
+    background-color: #007bff; /* Primary background color */
+    position: relative; /* Needed for positioning pseudo-elements */
+    overflow: hidden; /* Hide overflow for pseudo-elements */
+    transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transitions */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+.btn_signup::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300%; /* Larger than the button to cover it */
+    height: 300%;
+    background-color: rgba(255, 255, 255, 0.2); /* Subtle overlay color */
+    transform: translate(-50%, -50%) scale(0); /* Initially scale to 0 */
+    transition: transform 0.3s ease; /* Smooth scaling transition */
+    border-radius: 50%; /* Circular overlay */
+}
+
+.btn_signup:hover::before {
+    transform: translate(-50%, -50%) scale(1); /* Scale overlay to cover the button */
+}
+
+.btn_signup:hover {
+    background-color: #0056b3; /* Darker background color on hover */
+    transform: translateY(-2px); /* Slight lift effect on hover */
+}
+
+.btn_signup:focus {
+    outline: none; /* Remove default focus outline */
+}
+
+/* Base Button Style */
+.btn-primary {
+    font-size: 16px;
+    font-weight: bold;
+    width:50%;
+    border-radius: 4px; /* Rounded corners */
+    border: none; /* Remove default border */
+    color: #fff; /* Text color */
+    background-color: #007bff; /* Primary background color */
+    padding: 12px 24px; /* Padding inside the button */
+    text-align: center; /* Center text inside button */
+    text-decoration: none; /* Remove underline from link */
+    display: inline-block; /* Allow button to adjust size based on content */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transition */
+    cursor: pointer; /* Change cursor to pointer on hover */
+}
+
+/* Button Hover State */
+.btn-primary:hover {
+    background-color: #0056b3; /* Darker shade of primary color on hover */
+    transform: scale(1.05); /* Slightly enlarge button on hover */
+}
+
+/* Button Active State */
+.btn-primary:active {
+    background-color: #03356a; /* Even darker shade on active */
+    transform: scale(1); /* Return to original size */
+}
+
+/* Full Width Button */
+.btn-block {
+    width: 30%; /* Make button take full width of its container */
+}
+
+/* Button Disabled State */
+.btn-primary:disabled {
+    background-color: #6c757d; /* Gray color for disabled state */
+    cursor: not-allowed; /* Change cursor to indicate disabled */
+}
+
