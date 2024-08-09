@@ -88,14 +88,6 @@ export default class WelcomePage extends Component {
               <span className="navbar-toggler-icon"></span>
             </button>
             <div className="collapse navbar-collapse" id="navbarsExampleDefault">
-              <ul>
-                <li className="btn btn-lg btn_style text-uppercase animate_btn">
-                  <Link className="nav-link" to="/">Home</Link>
-                </li>
-                <li className="btn btn-lg btn_style text-uppercase animate_btn">
-                  <Link className="nav-link" to="#">Features</Link>
-                </li>
-              </ul>
               <span className="button-container">
                 <button className="btn_signup" onClick={this.handleSignupRedirect}>Sign Up</button>
               </span>
