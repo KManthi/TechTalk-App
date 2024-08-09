@@ -232,6 +232,11 @@ class Ratings(Resource):
             return make_response(jsonify({'message': 'You have already rated this post.'}), 400)
         
         try:
+            if status == 'like':
+                post.likes_count += 1
+            elif status == 'dislike':
+                post.dislikes_count += 1
+
             new_rating = Rating(
                 post_id=post_id,
                 user_id=user_id,
@@ -239,7 +244,68 @@ class Ratings(Resource):
             )
             db.session.add(new_rating)
             db.session.commit()
+
             return make_response(jsonify({'message': 'Rating created'}), 201)
+        except Exception as e:
+            db.session.rollback()
+            return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
+
+    @jwt_required()
+    def put(self, post_id, id):
+        data = request.get_json()
+        status = data.get('status')
+        if status not in ['like', 'dislike']:
+            return make_response(jsonify({'message': 'Bad Request: Invalid status'}), 400)
+
+        rating = Rating.query.filter_by(post_id=post_id, id=id).first()
+        if not rating:
+            return make_response(jsonify({'message': 'Rating not found'}), 404)
+
+        user_id = get_jwt_identity()
+        if rating.user_id != user_id:
+            return make_response(jsonify({'message': 'Forbidden: You are not authorized to update this rating'}), 403)
+
+        try:
+            # Update post counts
+            post = Post.query.get(post_id)
+            if rating.status == 'like':
+                post.likes_count -= 1
+            elif rating.status == 'dislike':
+                post.dislikes_count -= 1
+
+            if status == 'like':
+                post.likes_count += 1
+            elif status == 'dislike':
+                post.dislikes_count += 1
+
+            rating.status = status
+            db.session.commit()
+
+            return make_response(jsonify({'message': 'Rating updated', 'rating': rating.to_dict()}), 200)
+        except Exception as e:
+            db.session.rollback()
+            return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
+
+    @jwt_required()
+    def delete(self, post_id, id):
+        rating = Rating.query.filter_by(post_id=post_id, id=id).first()
+        if not rating:
+            return make_response(jsonify({'message': 'Rating not found'}), 404)
+        
+        user_id = get_jwt_identity()
+        if user_id != rating.user_id:
+            return make_response(jsonify({'message': 'Forbidden: You are not authorized to delete this rating'}), 403)
+        
+        try:
+            post = Post.query.get(post_id)
+            if rating.status == 'like':
+                post.likes_count -= 1
+            elif rating.status == 'dislike':
+                post.dislikes_count -= 1
+
+            db.session.delete(rating)
+            db.session.commit()
+            return make_response(jsonify({'message': 'Rating deleted'}), 200)
         except Exception as e:
             db.session.rollback()
             return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
@@ -593,7 +659,21 @@ class PostByID(Resource):
         except Exception as e:
             db.session.rollback()
             return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
+        
+class PostsFromFollowedUsers(Resource):
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()
 
+        followed_users_ids = db.session.query(followers.c.followed_id).filter(followers.c.follower_id == user_id).subquery()
+
+        posts = Post.query.filter(Post.author_id.in_(followed_users_ids)).order_by(Post.created_at.desc()).all()
+
+        result = [post.to_dict() for post in posts]
+
+        return make_response(jsonify(result), 200)
+
+api.add_resource(PostsFromFollowedUsers, '/posts/followed')
 api.add_resource(Posts, '/posts')
 api.add_resource(PostByID, '/posts/<int:id>')
 

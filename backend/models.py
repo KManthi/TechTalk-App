@@ -97,6 +97,7 @@ class Rating(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     status = db.Column(SqlEnum(RatingStatus), nullable=False)
 
+
     def __repr__(self):
         return f'<Rating {self.id}>'
     
@@ -138,6 +139,8 @@ class Post(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    likes_count = db.Column(db.Integer, default=0)
+    dislikes_count = db.Column(db.Integer, default=0)
 
     user = db.relationship('User', backref=db.backref('posts', lazy=True))
     category = db.relationship('Category', backref=db.backref('posts', lazy=True))
@@ -148,10 +151,13 @@ class Post(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'author_id': self.user_id,
+            'author': self.user.username,
+            'author_id': self.author_id,
             'category_id': self.category_id,
             'title': self.title,
             'content': self.content,
+            'likes_count': self.likes_count,
+            'dislikes_count': self.dislikes_count,
             'created_at': self.created_at,
             'updated_at': self.updated_at
         }
