@@ -23,7 +23,6 @@ jwt = JWTManager(app)
 UPLOAD_FOLDER = 'upload_folder'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'docx'}
 
-
 blacklist = set()
 
 @jwt.token_in_blocklist_loader
@@ -886,6 +885,9 @@ class CommentResource(Resource):
             post_id=post_id
         )
         db.session.add(new_comment)
+        post = Post.query.get(post_id)
+        if post:
+            post.comments_count += 1
         db.session.commit()
         return make_response(jsonify({'message': 'Comment created successfully'}), 201)
     

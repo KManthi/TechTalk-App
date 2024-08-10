@@ -1,6 +1,8 @@
+// HomeComponent.jsx
 import React, { useEffect, useState } from 'react';
-import '../index.css';
 import axios from 'axios';
+import PostActions from './PostActions'; 
+import NavigationBar from './NavigationBar'; 
 
 const baseUrl = 'http://127.0.0.1:5555';
 
@@ -8,6 +10,12 @@ const HomeComponent = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [expandedPostId, setExpandedPostId] = useState(null);
+    const [newComment, setNewComment] = useState('');
+
+    useEffect(() => {
+        fetchPosts();
+    }, []);
 
     const fetchPosts = async (retry = true) => {
         try {
@@ -48,68 +56,37 @@ const HomeComponent = () => {
         }
     };
 
-    useEffect(() => {
-        fetchPosts();
-    }, []);
+    const handleCommentSubmit = async (postId) => {
+        if (!newComment.trim()) return;
 
-    const handleLike = async (postId, liked) => {
         try {
-            const status = liked ? 'neutral' : 'like';
-            await axios.post(`${baseUrl}/ratings`, {
-                post_id: postId,
-                status
-            }, {
+            await axios.post(`${baseUrl}/posts/${postId}/comments`, { content: newComment }, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                 }
             });
-            setPosts(posts.map(post => 
+            setPosts(posts.map(post =>
                 post.id === postId
-                    ? { ...post, likes_count: post.likes_count + (liked ? -1 : 1), liked: !liked }
+                    ? { ...post, comments: [...(post.comments || []), { content: newComment, user: 'You', created_at: new Date().toISOString() }], comments_count: (post.comments_count || 0) + 1 }
                     : post
             ));
+            setNewComment(''); 
         } catch (error) {
             if (error.response && error.response.status === 401) {
                 try {
                     await refreshAccessToken();
-                    return handleLike(postId, liked);
+                    return handleCommentSubmit(postId);
                 } catch (refreshError) {
-                    console.error('Error refreshing token while liking post:', refreshError);
+                    console.error('Error refreshing token while commenting on post:', refreshError);
                 }
             } else {
-                console.error('Error liking post:', error);
+                console.error('Error commenting on post:', error);
             }
         }
     };
 
-    const handleDislike = async (postId, disliked) => {
-        try {
-            const status = disliked ? 'neutral' : 'dislike';
-            await axios.post(`${baseUrl}/ratings`, {
-                post_id: postId,
-                status
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
-            });
-            setPosts(posts.map(post => 
-                post.id === postId
-                    ? { ...post, dislikes_count: post.dislikes_count + (disliked ? -1 : 1), disliked: !disliked }
-                    : post
-            ));
-        } catch (error) {
-            if (error.response && error.response.status === 401) {
-                try {
-                    await refreshAccessToken();
-                    return handleDislike(postId, disliked);
-                } catch (refreshError) {
-                    console.error('Error refreshing token while disliking post:', refreshError);
-                }
-            } else {
-                console.error('Error disliking post:', error);
-            }
-        }
+    const togglePostExpansion = (postId) => {
+        setExpandedPostId(expandedPostId === postId ? null : postId);
     };
 
     if (loading) return <p>Loading posts...</p>;
@@ -117,32 +94,47 @@ const HomeComponent = () => {
 
     return (
         <div className='home-container'>
-            <h1>Home Page</h1>
-            {posts.length === 0 ? (
-                <p>No posts found, try following some users.</p>
-            ) : (
-                posts.map(post => (
-                    <div key={post.id} className='post-card'>
-                        <h2>{post.title}</h2>
-                        <p>{post.content}</p>
-                        <small>Posted by {post.author} on { new Date(post.created_at).toLocaleString()}</small>
-                        <div className='actions'>
-                            <button
-                                onClick={() => handleLike(post.id, post.liked)}
-                                className={post.liked ? 'liked' : ''}
-                            >
-                                👍 {post.likes_count}
-                            </button>
-                            <button
-                                onClick={() => handleDislike(post.id, post.disliked)}
-                                className={post.disliked ? 'disliked' : ''}
-                            >
-                                👎 {post.dislikes_count}
-                            </button>
+            <NavigationBar /> 
+            <main>
+                <h1>Home Page</h1>
+                {posts.length === 0 ? (
+                    <p>No posts found, try following some users.</p>
+                ) : (
+                    posts.map(post => (
+                        <div key={post.id} className='post-card'>
+                            <h2 onClick={() => togglePostExpansion(post.id)}>{post.title}</h2>
+                            <p>{post.content}</p>
+                            <small>Posted by {post.author} on {new Date(post.created_at).toLocaleString()}</small>
+                            <PostActions
+                                post={post}
+                                fetchPosts={fetchPosts}
+                            />
+                            {expandedPostId === post.id && (
+                                <div className='expanded-content'>
+                                    <div className='comment-section'>
+                                        <h3>Comments ({post.comments_count || 0})</h3>
+                                        {(post.comments || []).map((comment, index) => (
+                                            <div key={index} className='comment'>
+                                                <p><strong>{comment.user}:</strong> {comment.content}</p>
+                                                <small>{new Date(comment.created_at).toLocaleString()}</small>
+                                            </div>
+                                        ))}
+                                        <div className='comment-form'>
+                                            <textarea
+                                                rows='3'
+                                                placeholder='Add a comment...'
+                                                value={newComment}
+                                                onChange={(e) => setNewComment(e.target.value)}
+                                            />
+                                            <button onClick={() => handleCommentSubmit(post.id)}>Comment</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    </div>
-                ))
-            )}
+                    ))
+                )}
+            </main>
         </div>
     );
 };

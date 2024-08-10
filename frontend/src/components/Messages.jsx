@@ -93,4 +93,3 @@ const Messages = ({ messages = [], setMessages, onReply }) => {
 
 export default Messages;
 
-// testing
