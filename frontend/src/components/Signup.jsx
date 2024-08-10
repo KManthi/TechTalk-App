@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 function Signup() {
   const [formData, setFormData] = useState({
@@ -11,7 +11,7 @@ function Signup() {
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -47,10 +47,10 @@ function Signup() {
     }
 
     try {
-      const response = await axios.post('http://127.0.0.1:5555/users', formData);
+      await axios.post('http://127.0.0.1:5555/users', formData);
       setSuccess('Account created successfully!');
       setError('');
-      history.push('/home');
+      navigate('/home');
     } catch (err) {
       setError('Failed to create account. Please try again.');
       setSuccess('');

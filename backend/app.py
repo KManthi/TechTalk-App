@@ -2,7 +2,7 @@ import os
 from flask import Flask, request, make_response, jsonify
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
-from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token, get_jwt
+from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token, get_jwt, create_refresh_token
 from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites, Category, followers, Settings, Attachment, Tag, Messages, Comment
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
@@ -31,6 +31,13 @@ def check_if_token_in_blacklist(jwt_header, jwt_payload):
     jti = jwt_payload['jti']
     return jti in blacklist
 
+@app.route('/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+    identity = get_jwt_identity()
+    access_token = create_access_token(identity=identity)
+    return jsonify(access_token=access_token), 200
+
 # Login and Logout Routes
 @app.route('/')
 def index():
@@ -46,9 +53,14 @@ def login():
     user = User.query.filter_by(username=username).first()
     if user and user.check_password(password):
         access_token = create_access_token(identity=user.id)
-        return {'access_token': access_token}, 200
+        refresh_token = create_refresh_token(identity=user.id)
+        return {
+            'access_token': access_token,
+            'refresh_token': refresh_token
+        }, 200
     else:
         return {'message': 'Invalid credentials'}, 401
+    
 
 @app.route('/logout', methods=['DELETE'])
 @jwt_required()

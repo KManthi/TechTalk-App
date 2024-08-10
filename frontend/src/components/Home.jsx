@@ -9,23 +9,46 @@ const HomeComponent = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchPosts = async () => {
-            try {
-                const response = await axios.get(`${baseUrl}/posts`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                    }
-                });
-                setPosts(response.data);
-            } catch (error) {
+    const fetchPosts = async (retry = true) => {
+        try {
+            const response = await axios.get(`${baseUrl}/posts`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
+            });
+            setPosts(response.data);
+        } catch (error) {
+            if (error.response && error.response.status === 401 && retry) {
+                try {
+                    await refreshAccessToken();
+                    return fetchPosts(false);
+                } catch (refreshError) {
+                    setError('Failed to refresh token');
+                }
+            } else {
                 setError('Failed to fetch posts');
                 console.error('Error fetching posts:', error);
-            } finally {
-                setLoading(false);
             }
-        };
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    const refreshAccessToken = async () => {
+        try {
+            const response = await axios.post(`${baseUrl}/refresh`, {}, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('refresh_token')}`
+                }
+            });
+            localStorage.setItem('access_token', response.data.access_token);
+        } catch (error) {
+            console.error('Error refreshing token:', error);
+            throw error;
+        }
+    };
+
+    useEffect(() => {
         fetchPosts();
     }, []);
 
@@ -46,7 +69,16 @@ const HomeComponent = () => {
                     : post
             ));
         } catch (error) {
-            console.error('Error liking post:', error);
+            if (error.response && error.response.status === 401) {
+                try {
+                    await refreshAccessToken();
+                    return handleLike(postId, liked);
+                } catch (refreshError) {
+                    console.error('Error refreshing token while liking post:', refreshError);
+                }
+            } else {
+                console.error('Error liking post:', error);
+            }
         }
     };
 
@@ -67,9 +99,18 @@ const HomeComponent = () => {
                     : post
             ));
         } catch (error) {
-            console.error('Error disliking post:', error);
+            if (error.response && error.response.status === 401) {
+                try {
+                    await refreshAccessToken();
+                    return handleDislike(postId, disliked);
+                } catch (refreshError) {
+                    console.error('Error refreshing token while disliking post:', refreshError);
+                }
+            } else {
+                console.error('Error disliking post:', error);
+            }
         }
-    }; 
+    };
 
     if (loading) return <p>Loading posts...</p>;
     if (error) return <p>Error: {error}</p>;
