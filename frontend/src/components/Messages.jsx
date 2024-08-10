@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import './Messages.css';
+import { useNavigate } from 'react-router-dom';
 
-const Messages = ({ messages, onReply }) => {
+const Messages = ({ messages = [], setMessages, onReply }) => {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [replyContent, setReplyContent] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleOpenMessage = (message) => {
     setSelectedMessage(message);
@@ -34,26 +35,35 @@ const Messages = ({ messages, onReply }) => {
     setSelectedMessage(null);
   };
 
+  const handleBackToHome = () => {
+    setSelectedMessage(null);
+    navigate('/home');
+  };
+
   return (
     <div className="messages-container">
-      <button onClick={() => setSelectedMessage(null)}>Back to Inbox</button>
+      <button onClick={handleBackToHome}>Back to Home</button>
 
       {!selectedMessage ? (
         <div className="inbox">
           <h2>Inbox</h2>
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`message-preview ${message.read ? '' : 'unread'}`}
-              onClick={() => handleOpenMessage(message)}
-            >
-              <p>
-                <strong>{message.sender}</strong>
-                <span>{message.subject || 'No Subject'}</span>
-                <span>{new Date(message.timestamp).toLocaleString()}</span>
-              </p>
-            </div>
-          ))}
+          {messages.length > 0 ? (
+            messages.map((message) => (
+              <div
+                key={message.id}
+                className={`message-preview ${message.read ? '' : 'unread'}`}
+                onClick={() => handleOpenMessage(message)}
+              >
+                <p>
+                  <strong>{message.sender}</strong>
+                  <span>{message.subject || 'No Subject'}</span>
+                  <span>{new Date(message.timestamp).toLocaleString()}</span>
+                </p>
+              </div>
+            ))
+          ) : (
+            <p>No messages found.</p>
+          )}
         </div>
       ) : (
         <div className="message-view">
