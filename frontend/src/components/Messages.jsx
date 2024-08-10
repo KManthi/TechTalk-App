@@ -1,21 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import './Messages.css';
 
 const Messages = ({ messages, onReply }) => {
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const [replyContent, setReplyContent] = useState('');
+  const [error, setError] = useState('');
 
   const handleOpenMessage = (message) => {
     setSelectedMessage(message);
-    message.read = true;
+    const updatedMessages = messages.map((msg) =>
+      msg.id === message.id ? { ...msg, read: true } : msg
+    );
+    setMessages(updatedMessages);
   };
 
-  const handleReply = (replyContent) => {
+  const handleReply = () => {
     if (selectedMessage && onReply) {
+      if (replyContent.trim() === '') {
+        setError('Reply content cannot be empty.');
+        return;
+      }
       onReply(selectedMessage.id, replyContent);
+      setReplyContent('');
+      setError('');
     }
   };
 
   const handleMarkAsUnread = (message) => {
-    message.read = false;
+    const updatedMessages = messages.map((msg) =>
+      msg.id === message.id ? { ...msg, read: false } : msg
+    );
+    setMessages(updatedMessages);
     setSelectedMessage(null);
   };
 
@@ -43,15 +58,20 @@ const Messages = ({ messages, onReply }) => {
       ) : (
         <div className="message-view">
           <h2>Message from {selectedMessage.sender}</h2>
-          <p><strong>Received:</strong> {new Date(selectedMessage.timestamp).toLocaleString()}</p>
+          <p>
+            <strong>Received:</strong> {new Date(selectedMessage.timestamp).toLocaleString()}
+          </p>
           <div>{selectedMessage.body}</div>
 
           <div className="reply-section">
             <textarea
               placeholder="Type your reply here..."
               rows="4"
+              value={replyContent}
+              onChange={(e) => setReplyContent(e.target.value)}
             />
-            <button onClick={() => handleReply(document.querySelector('textarea').value)}>Send Reply</button>
+            <button onClick={handleReply}>Send Reply</button>
+            {error && <div className="error">{error}</div>}
           </div>
 
           <button onClick={() => handleMarkAsUnread(selectedMessage)}>Mark as Unread</button>
