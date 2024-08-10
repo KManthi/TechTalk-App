@@ -17,7 +17,6 @@ class RatingStatus(Enum):
     DISLIKE = "dislike"
     NEUTRAL = "neutral"
 
-
 metadata = MetaData(
     naming_convention={
         "pk": "pk_%(table_name)s",
@@ -97,7 +96,6 @@ class Rating(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     status = db.Column(SqlEnum(RatingStatus), nullable=False)
 
-
     def __repr__(self):
         return f'<Rating {self.id}>'
     
@@ -141,6 +139,7 @@ class Post(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     likes_count = db.Column(db.Integer, default=0)
     dislikes_count = db.Column(db.Integer, default=0)
+    comments_count = db.Column(db.Integer, default=0)
 
     user = db.relationship('User', backref=db.backref('posts', lazy=True))
     category = db.relationship('Category', backref=db.backref('posts', lazy=True))
@@ -158,6 +157,7 @@ class Post(db.Model):
             'content': self.content,
             'likes_count': self.likes_count,
             'dislikes_count': self.dislikes_count,
+            'comments_count': self.comments_count,
             'created_at': self.created_at,
             'updated_at': self.updated_at
         }

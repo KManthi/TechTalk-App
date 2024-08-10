@@ -4,6 +4,7 @@ import WelcomePage from './components/WelcomePage';
 import Signup from './components/Signup';
 import UserProfilePage from './components/UserProfilePage';
 import Home from './components/Home';
+import Messages from './components/Messages';
 
 const App = () => {
   return (
@@ -13,6 +14,7 @@ const App = () => {
         <Route path="/signup" element={<Signup />} />
         <Route path="/profile" element={<UserProfilePage />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/messages"  element={<Messages />} />
       </Routes>
     </Router>
   );
