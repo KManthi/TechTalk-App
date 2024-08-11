@@ -1,10 +1,26 @@
-import React, { useState } from 'react';
-import './Messages.css';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-const Messages = ({ messages, onReply }) => {
+const Messages = () => {
+  const [messages, setMessages] = useState([]);
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [replyContent, setReplyContent] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await axios.get('https://techtalk-app.onrender.com/api/messages');
+        setMessages(response.data);
+      } catch (error) {
+        setError('Failed to fetch messages.');
+      }
+    };
+
+    fetchMessages();
+  }, []);
 
   const handleOpenMessage = (message) => {
     setSelectedMessage(message);
@@ -12,48 +28,80 @@ const Messages = ({ messages, onReply }) => {
       msg.id === message.id ? { ...msg, read: true } : msg
     );
     setMessages(updatedMessages);
+    updateMessageStatus(message.id, true);
   };
 
-  const handleReply = () => {
-    if (selectedMessage && onReply) {
+  const updateMessageStatus = async (messageId, readStatus) => {
+    try {
+      await axios.post(`https://techtalk-app.onrender.com/api/messages/${messageId}/status`, {
+        read: readStatus,
+      });
+    } catch (error) {
+      setError('Failed to update message status.');
+    }
+  };
+
+  const handleReply = async () => {
+    if (selectedMessage) {
       if (replyContent.trim() === '') {
         setError('Reply content cannot be empty.');
         return;
       }
-      onReply(selectedMessage.id, replyContent);
-      setReplyContent('');
-      setError('');
+
+      try {
+        await axios.post(`https://techtalk-app.onrender.com/api/messages/${selectedMessage.id}/reply`, {
+          content: replyContent,
+        });
+        setReplyContent('');
+        setError('');
+      } catch (error) {
+        setError('Failed to send reply.');
+      }
     }
   };
 
-  const handleMarkAsUnread = (message) => {
-    const updatedMessages = messages.map((msg) =>
-      msg.id === message.id ? { ...msg, read: false } : msg
-    );
-    setMessages(updatedMessages);
+  const handleMarkAsUnread = async (message) => {
+    try {
+      await axios.post(`https://techtalk-app.onrender.com/api/messages/${message.id}/mark-unread`);
+      const updatedMessages = messages.map((msg) =>
+        msg.id === message.id ? { ...msg, read: false } : msg
+      );
+      setMessages(updatedMessages);
+      setSelectedMessage(null);
+    } catch (error) {
+      setError('Failed to mark message as unread.');
+    }
+  };
+
+  const handleBackToHome = () => {
     setSelectedMessage(null);
+    navigate('/home');
   };
 
   return (
     <div className="messages-container">
-      <button onClick={() => setSelectedMessage(null)}>Back to Inbox</button>
+      <button onClick={handleBackToHome}>Back to Home</button>
 
       {!selectedMessage ? (
         <div className="inbox">
           <h2>Inbox</h2>
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`message-preview ${message.read ? '' : 'unread'}`}
-              onClick={() => handleOpenMessage(message)}
-            >
-              <p>
-                <strong>{message.sender}</strong>
-                <span>{message.subject || 'No Subject'}</span>
-                <span>{new Date(message.timestamp).toLocaleString()}</span>
-              </p>
-            </div>
-          ))}
+          {messages.length > 0 ? (
+            messages.map((message) => (
+              <div
+                key={message.id}
+                className={`message-preview ${message.read ? '' : 'unread'}`}
+                onClick={() => handleOpenMessage(message)}
+              >
+                <p>
+                  <strong>{message.sender}</strong>
+                  <span>{message.subject || 'No Subject'}</span>
+                  <span>{new Date(message.timestamp).toLocaleString()}</span>
+                </p>
+              </div>
+            ))
+          ) : (
+            <p>No messages found.</p>
+          )}
         </div>
       ) : (
         <div className="message-view">
