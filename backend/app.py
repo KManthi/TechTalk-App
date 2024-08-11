@@ -240,7 +240,8 @@ class Ratings(Resource):
 
         existing_rating = Rating.query.filter_by(post_id=post_id, user_id=user_id).first()
         if existing_rating:
-            return make_response(jsonify({'message': 'You have already rated this post.'}), 400)
+            # Optionally, update the existing rating instead of returning an error
+            return self.put(post_id, existing_rating.id)  # Call put method to update the rating
         
         try:
             if status == 'like':
@@ -262,21 +263,23 @@ class Ratings(Resource):
             return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
 
     @jwt_required()
-    def put(self, post_id, id):
+    def put(self, post_id, id=None):
         data = request.get_json()
         status = data.get('status')
         if status not in ['like', 'dislike']:
             return make_response(jsonify({'message': 'Bad Request: Invalid status'}), 400)
 
-        rating = Rating.query.filter_by(post_id=post_id, id=id).first()
-        if not rating:
-            return make_response(jsonify({'message': 'Rating not found'}), 404)
-
         user_id = get_jwt_identity()
-        if rating.user_id != user_id:
-            return make_response(jsonify({'message': 'Forbidden: You are not authorized to update this rating'}), 403)
 
-        try:
+        # If id is provided, update the specific rating
+        if id:
+            rating = Rating.query.filter_by(post_id=post_id, id=id).first()
+            if not rating:
+                return make_response(jsonify({'message': 'Rating not found'}), 404)
+            
+            if rating.user_id != user_id:
+                return make_response(jsonify({'message': 'Forbidden: You are not authorized to update this rating'}), 403)
+
             # Update post counts
             post = Post.query.get(post_id)
             if rating.status == 'like':
@@ -293,9 +296,9 @@ class Ratings(Resource):
             db.session.commit()
 
             return make_response(jsonify({'message': 'Rating updated', 'rating': rating.to_dict()}), 200)
-        except Exception as e:
-            db.session.rollback()
-            return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
+        
+        # No id provided, create a new rating (POST logic)
+        return self.post()
 
     @jwt_required()
     def delete(self, post_id, id):
@@ -358,7 +361,7 @@ class RatingByPost(Resource):
             return make_response(jsonify({'message': 'Rating not found'}), 404)
         
         user_id = get_jwt_identity()
-        if user_id!= rating.user_id:
+        if user_id != rating.user_id:
             return make_response(jsonify({'message': 'Forbidden: You are not authorized to delete this rating'}), 403)
         
         try:

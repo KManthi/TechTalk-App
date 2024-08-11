@@ -5,6 +5,9 @@ import Signup from './components/Signup';
 import UserProfilePage from './components/UserProfilePage';
 import Explore from './components/Explore';
 import Home from './components/Home';
+import Messages from './components/Messages';
+import Settings from './components/Settings';
+import NotificationsPage from './components/Notifications';
 
 const App = () => {
   return (
@@ -15,7 +18,9 @@ const App = () => {
         <Route path="/profile" element={<UserProfilePage />} />
         <Route path="/explore" element={<Explore />} />
         <Route path="/home" element={<Home />} />
-        
+        <Route path="/messages" element={<Messages />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
       </Routes>
     </Router>
   );
