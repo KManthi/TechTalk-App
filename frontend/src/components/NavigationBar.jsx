@@ -47,7 +47,7 @@ const NavigationBar = () => {
                 </li>
                 <li>
                     <Link to="/notifications">
-                        <FontAwesomeIcon icon={bell} size="lg" />
+                        <FontAwesomeIcon icon={bell} size="'https://techtalk-app.onrender.com/register'lg" />
                         <span>Notifications</span>
                     </Link>
                 </li>

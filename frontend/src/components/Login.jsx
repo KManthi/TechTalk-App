@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -9,7 +9,7 @@ function Login() {
   });
 
   const [error, setError] = useState('');
-  const history = useHistory();
+  const navigate = useNavigate(); // Updated to useNavigate
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,7 +30,7 @@ function Login() {
 
       setError('');
       // Redirect to home page after successful login
-      history.push('/home');
+      navigate('/home'); // Updated to use navigate
     } catch (err) {
       setError('Login failed. Please check your credentials and try again.');
     }
