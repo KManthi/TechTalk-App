@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const Explore = () => {
   const [trendingPosts, setTrendingPosts] = useState([]);
@@ -8,24 +9,32 @@ const Explore = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Simulate data fetching
-    setTimeout(() => {
-      setTrendingPosts([
-        { id: 1, title: 'React Tips', content: 'Some content about React...' },
-        { id: 2, title: 'Flask Tips', content: 'Some content about Flask...' }
-      ]);
-      setPopularTags(['React', 'JavaScript', 'WebDev']);
-      setRecommendedUsers([
-        { id: 1, username: 'dev_user' },
-        { id: 2, username: 'tech_guru' }
-      ]);
-      setLoading(false);
-    }, 1000);
+    const fetchExploreData = async () => {
+      try {
+        const postsResponse = await axios.get('https://techtalk-app.onrender.com/api/trending-posts');
+        const tagsResponse = await axios.get('https://techtalk-app.onrender.com/api/popular-tags');
+        const usersResponse = await axios.get('https://techtalk-app.onrender.com/api/recommended-users');
+
+        setTrendingPosts(postsResponse.data);
+        setPopularTags(tagsResponse.data);
+        setRecommendedUsers(usersResponse.data);
+      } catch (error) {
+        setError('Failed to fetch explore data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExploreData();
   }, []);
 
-  const handleFollow = (userId) => {
-    // Simulate follow action
-    alert(`Followed user with ID: ${userId}`);
+  const handleFollow = async (userId) => {
+    try {
+      await axios.post(`https://techtalk-app.onrender.com/api/follow/${userId}`);
+      alert(`Followed user with ID: ${userId}`);
+    } catch (error) {
+      alert('Failed to follow user.');
+    }
   };
 
   if (loading) {

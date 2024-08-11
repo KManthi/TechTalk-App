@@ -1,11 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-const Messages = ({ messages = [], setMessages, onReply }) => {
+const Messages = () => {
+  const [messages, setMessages] = useState([]);
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [replyContent, setReplyContent] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await axios.get('https://techtalk-app.onrender.com/api/messages');
+        setMessages(response.data);
+      } catch (error) {
+        setError('Failed to fetch messages.');
+      }
+    };
+
+    fetchMessages();
+  }, []);
 
   const handleOpenMessage = (message) => {
     setSelectedMessage(message);
@@ -13,26 +28,49 @@ const Messages = ({ messages = [], setMessages, onReply }) => {
       msg.id === message.id ? { ...msg, read: true } : msg
     );
     setMessages(updatedMessages);
+    updateMessageStatus(message.id, true);
   };
 
-  const handleReply = () => {
-    if (selectedMessage && onReply) {
+  const updateMessageStatus = async (messageId, readStatus) => {
+    try {
+      await axios.post(`https://techtalk-app.onrender.com/api/messages/${messageId}/status`, {
+        read: readStatus,
+      });
+    } catch (error) {
+      setError('Failed to update message status.');
+    }
+  };
+
+  const handleReply = async () => {
+    if (selectedMessage) {
       if (replyContent.trim() === '') {
         setError('Reply content cannot be empty.');
         return;
       }
-      onReply(selectedMessage.id, replyContent);
-      setReplyContent('');
-      setError('');
+
+      try {
+        await axios.post(`https://techtalk-app.onrender.com/api/messages/${selectedMessage.id}/reply`, {
+          content: replyContent,
+        });
+        setReplyContent('');
+        setError('');
+      } catch (error) {
+        setError('Failed to send reply.');
+      }
     }
   };
 
-  const handleMarkAsUnread = (message) => {
-    const updatedMessages = messages.map((msg) =>
-      msg.id === message.id ? { ...msg, read: false } : msg
-    );
-    setMessages(updatedMessages);
-    setSelectedMessage(null);
+  const handleMarkAsUnread = async (message) => {
+    try {
+      await axios.post(`https://techtalk-app.onrender.com/api/messages/${message.id}/mark-unread`);
+      const updatedMessages = messages.map((msg) =>
+        msg.id === message.id ? { ...msg, read: false } : msg
+      );
+      setMessages(updatedMessages);
+      setSelectedMessage(null);
+    } catch (error) {
+      setError('Failed to mark message as unread.');
+    }
   };
 
   const handleBackToHome = () => {
@@ -92,4 +130,3 @@ const Messages = ({ messages = [], setMessages, onReply }) => {
 };
 
 export default Messages;
-
