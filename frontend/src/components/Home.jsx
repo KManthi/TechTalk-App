@@ -1,8 +1,8 @@
-// HomeComponent.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import PostActions from './PostActions'; 
 import NavigationBar from './NavigationBar'; 
+import Spinner from './Spinner'; // Import the Spinner component
 
 const baseUrl = 'http://127.0.0.1:5555';
 
@@ -10,14 +10,12 @@ const HomeComponent = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [expandedPostId, setExpandedPostId] = useState(null);
-    const [newComment, setNewComment] = useState('');
 
     useEffect(() => {
         fetchPosts();
     }, []);
 
-    const fetchPosts = async (retry = true) => {
+    const fetchPosts = async () => {
         try {
             const response = await axios.get(`${baseUrl}/posts`, {
                 headers: {
@@ -26,70 +24,26 @@ const HomeComponent = () => {
             });
             setPosts(response.data);
         } catch (error) {
-            if (error.response && error.response.status === 401 && retry) {
-                try {
-                    await refreshAccessToken();
-                    return fetchPosts(false);
-                } catch (refreshError) {
-                    setError('Failed to refresh token');
-                }
-            } else {
-                setError('Failed to fetch posts');
-                console.error('Error fetching posts:', error);
-            }
+            setError('Failed to fetch posts');
+            console.error('Error fetching posts:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const refreshAccessToken = async () => {
-        try {
-            const response = await axios.post(`${baseUrl}/refresh`, {}, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('refresh_token')}`
+    const handlePostUpdate = (postId, newComment) => {
+        setPosts(posts.map(post =>
+            post.id === postId
+                ? {
+                    ...post, 
+                    comments: [...(post.comments || []), { content: newComment, user: 'You', created_at: new Date().toISOString() }], 
+                    comments_count: (post.comments_count || 0) + 1 
                 }
-            });
-            localStorage.setItem('access_token', response.data.access_token);
-        } catch (error) {
-            console.error('Error refreshing token:', error);
-            throw error;
-        }
+                : post
+        ));
     };
 
-    const handleCommentSubmit = async (postId) => {
-        if (!newComment.trim()) return;
-
-        try {
-            await axios.post(`${baseUrl}/posts/${postId}/comments`, { content: newComment }, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
-            });
-            setPosts(posts.map(post =>
-                post.id === postId
-                    ? { ...post, comments: [...(post.comments || []), { content: newComment, user: 'You', created_at: new Date().toISOString() }], comments_count: (post.comments_count || 0) + 1 }
-                    : post
-            ));
-            setNewComment(''); 
-        } catch (error) {
-            if (error.response && error.response.status === 401) {
-                try {
-                    await refreshAccessToken();
-                    return handleCommentSubmit(postId);
-                } catch (refreshError) {
-                    console.error('Error refreshing token while commenting on post:', refreshError);
-                }
-            } else {
-                console.error('Error commenting on post:', error);
-            }
-        }
-    };
-
-    const togglePostExpansion = (postId) => {
-        setExpandedPostId(expandedPostId === postId ? null : postId);
-    };
-
-    if (loading) return <p>Loading posts...</p>;
+    if (loading) return <Spinner />; // Show spinner while loading
     if (error) return <p>Error: {error}</p>;
 
     return (
@@ -102,14 +56,17 @@ const HomeComponent = () => {
                 ) : (
                     posts.map(post => (
                         <div key={post.id} className='post-card'>
-                            <h2 onClick={() => togglePostExpansion(post.id)}>{post.title}</h2>
+                            <h2 onClick={() => setPosts(posts.map(p => p.id === post.id ? { ...p, isExpanded: !p.isExpanded } : p))}>
+                                {post.title}
+                            </h2>
                             <p>{post.content}</p>
                             <small>Posted by {post.author} on {new Date(post.created_at).toLocaleString()}</small>
                             <PostActions
                                 post={post}
                                 fetchPosts={fetchPosts}
+                                onPostUpdate={handlePostUpdate}
                             />
-                            {expandedPostId === post.id && (
+                            {post.isExpanded && (
                                 <div className='expanded-content'>
                                     <div className='comment-section'>
                                         <h3>Comments ({post.comments_count || 0})</h3>
@@ -119,15 +76,6 @@ const HomeComponent = () => {
                                                 <small>{new Date(comment.created_at).toLocaleString()}</small>
                                             </div>
                                         ))}
-                                        <div className='comment-form'>
-                                            <textarea
-                                                rows='3'
-                                                placeholder='Add a comment...'
-                                                value={newComment}
-                                                onChange={(e) => setNewComment(e.target.value)}
-                                            />
-                                            <button onClick={() => handleCommentSubmit(post.id)}>Comment</button>
-                                        </div>
                                     </div>
                                 </div>
                             )}

@@ -8,6 +8,7 @@ import Home from './components/Home';
 import Messages from './components/Messages';
 import Settings from './components/Settings';
 import NotificationsPage from './components/Notifications';
+import CreatePost from './components/Post';
 
 const App = () => {
   return (
@@ -21,6 +22,7 @@ const App = () => {
         <Route path="/messages" element={<Messages />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/create-post" element={<CreatePost />} />
       </Routes>
     </Router>
   );

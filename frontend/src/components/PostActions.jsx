@@ -1,9 +1,15 @@
-import React from 'react';
+// src/components/PostActions.js
+
+import React, { useState } from 'react';
 import axios from 'axios';
 
 const baseUrl = 'http://127.0.0.1:5555';
 
-const PostActions = ({ post, fetchPosts }) => {
+const PostActions = ({ post, fetchPosts, onPostUpdate }) => {
+    const [newComment, setNewComment] = useState('');
+    const [comments, setComments] = useState([]);
+    const [isExpanded, setIsExpanded] = useState(false);
+
     const handleLike = async (postId, liked) => {
         try {
             if (liked) {
@@ -61,14 +67,91 @@ const PostActions = ({ post, fetchPosts }) => {
         }
     };
 
+    const fetchComments = async (postId) => {
+        try {
+            const response = await axios.get(`${baseUrl}/posts/${postId}/comments`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
+            });
+            setComments(response.data);
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+        }
+    };
+
+    const handleCommentSubmit = async (postId) => {
+        if (!newComment.trim()) return;
+
+        try {
+            await axios.post(`${baseUrl}/posts/${postId}/comments`, { content: newComment }, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
+            });
+            onPostUpdate(postId, newComment);
+            setNewComment('');
+            fetchComments(postId); // Refresh comments after submission
+        } catch (error) {
+            console.error('Error commenting on post:', error);
+        }
+    };
+
+    const togglePostExpansion = () => {
+        setIsExpanded(!isExpanded);
+    };
+
     return (
         <div className='post-actions'>
-            <button onClick={() => handleLike(post.id, post.liked)} className={post.liked ? 'liked' : ''}>👍 {post.likes_count}</button>
-            <button onClick={() => handleDislike(post.id, post.disliked)} className={post.disliked ? 'disliked' : ''}>👎 {post.dislikes_count}</button>
-            <button onClick={() => handleFavorite(post.id, post.favorited)} className={post.favorited ? 'favorited' : ''}>⭐ {post.favorites_count}</button>
-            <button className='comment-bubble'>
+            <button 
+                onClick={() => handleLike(post.id, post.liked)} 
+                className={post.liked ? 'liked' : ''}
+            >
+                👍 {post.likes_count}
+            </button>
+            <button 
+                onClick={() => handleDislike(post.id, post.disliked)} 
+                className={post.disliked ? 'disliked' : ''}
+            >
+                👎 {post.dislikes_count}
+            </button>
+            <button 
+                onClick={() => handleFavorite(post.id, post.favorited)} 
+                className={post.favorited ? 'favorited' : ''}
+            >
+                ⭐ {post.favorites_count}
+            </button>
+            <button 
+                className='comment-bubble'
+                onClick={() => {
+                    fetchComments(post.id);
+                    togglePostExpansion();
+                }}
+            >
                 💬 {post.comments_count || 0}
             </button>
+            {isExpanded && (
+                <>
+                    <div className='comment-form'>
+                        <textarea
+                            rows='3'
+                            placeholder='Add a comment...'
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                        />
+                        <button onClick={() => handleCommentSubmit(post.id)}>Comment</button>
+                    </div>
+                    {comments.length > 0 && (
+                        <div className='comments-list'>
+                            {comments.map((comment) => (
+                                <div key={comment.id} className='comment'>
+                                    <p>{comment.content}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </>
+            )}
         </div>
     );
 };

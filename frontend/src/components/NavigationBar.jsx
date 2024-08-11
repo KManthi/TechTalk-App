@@ -1,3 +1,5 @@
+// src/components/NavigationBar.js
+
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome as igloo, faUser as bountyHunter, faRecordVinyl as albumCollection, faPenToSquare as writeToFile, faSliders as sliders, faEnvelope as mailbox, faBell as bell } from '@fortawesome/free-solid-svg-icons';
@@ -27,9 +29,9 @@ const NavigationBar = () => {
                     </Link>
                 </li>
                 <li>
-                    <Link to="/write">
+                    <Link to="/create-post">
                         <FontAwesomeIcon icon={writeToFile} size="lg" />
-                        <span>Write Post</span>
+                        <span>Post</span>
                     </Link>
                 </li>
                 <li>
@@ -47,7 +49,7 @@ const NavigationBar = () => {
                 </li>
                 <li>
                     <Link to="/notifications">
-                        <FontAwesomeIcon icon={bell} size="'https://techtalk-app.onrender.com/register'lg" />
+                        <FontAwesomeIcon icon={bell} size="lg" />
                         <span>Notifications</span>
                     </Link>
                 </li>

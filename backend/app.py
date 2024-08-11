@@ -3,7 +3,7 @@ from flask import Flask, request, make_response, jsonify
 from flask_migrate import Migrate
 from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token, get_jwt, create_refresh_token
-from backend.models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites, Category, followers, Settings, Attachment, Tag, Messages, Comment
+from models import db, UserProfile, Rating, Post, User, Notifications, UserFavourites, Category, followers, Settings, Attachment, Tag, Messages, Comment
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
@@ -872,28 +872,7 @@ class SettingsResource(Resource):
 api.add_resource(SettingsResource, '/users/me/settings')
 
 # Comment Resources
-class CommentResource(Resource):
-    @jwt_required()
-    def post(self, post_id):
-        data = request.get_json()
-        user_id = get_jwt_identity()
-        content = data.get('content')
-
-        if not content:
-            return make_response(jsonify({'message': 'Bad Request: Missing content'}), 400)
-
-        new_comment = Comment(
-            content=content,
-            user_id=user_id,
-            post_id=post_id
-        )
-        db.session.add(new_comment)
-        post = Post.query.get(post_id)
-        if post:
-            post.comments_count += 1
-        db.session.commit()
-        return make_response(jsonify({'message': 'Comment created successfully'}), 201)
-    
+class CommentResource(Resource):    
     @jwt_required()
     def get(self, post_id, id):
         comment = Comment.query.filter_by(id=id, post_id=post_id).first()
@@ -935,10 +914,44 @@ class CommentResource(Resource):
         return make_response(jsonify({'message': 'Comment deleted successfully'}), 200)
     
 class CommentsListResource(Resource):
+    @jwt_required()
+    def post(self, post_id):
+        data = request.get_json()
+        user_id = get_jwt_identity()
+        content = data.get('content')
+
+        if not content:
+            return make_response(jsonify({'message': 'Bad Request: Missing content'}), 400)
+
+        new_comment = Comment(
+            content=content,
+            user_id=user_id,
+            post_id=post_id
+        )
+        db.session.add(new_comment)
+        post = Post.query.get(post_id)
+        if post:
+            post.comments_count += 1
+        db.session.commit()
+        return make_response(jsonify({'message': 'Comment created successfully'}), 201)
+    
     def get(self, post_id):
-        comments = Comment.query.filter_by(post_id=post_id).all()
-        result = [comment.to_dict() for comment in comments]
-        return make_response(jsonify(result), 200)
+        page = request.args.get('page', 1, type=int)  
+        per_page = request.args.get('per_page', 10, type=int)  
+
+        try:
+            comments = Comment.query.filter_by(post_id=post_id).paginate(page, per_page, error_out=False)
+            comments_list = [{'id': c.id, 'content': c.content} for c in comments.items]
+            return jsonify({
+                'comments': comments_list,
+                'total': comments.total,
+                'pages': comments.pages,
+                'current_page': comments.page
+            })
+        except Exception as e:
+            print(f"Error fetching comments: {e}")
+            return {'message': 'Error fetching comments'}, 500
+
     
 api.add_resource(CommentResource, '/posts/<int:post_id>/comments/<int:id>')
 api.add_resource(CommentsListResource, '/posts/<int:post_id>/comments')
