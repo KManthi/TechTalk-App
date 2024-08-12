@@ -1,14 +1,15 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import WelcomePage from './components/WelcomePage';
+import WelcomePage from './components/LandingPage';
 import Signup from './components/Signup';
-import UserProfilePage from './components/UserProfilePage';
+import UserProfilePage from './components/UserProfile';
 import Explore from './components/Explore';
 import Home from './components/Home';
 import Messages from './components/Messages';
 import Settings from './components/Settings';
 import NotificationsPage from './components/Notifications';
 import CreatePost from './components/Post';
+import UserSettings from './components/UserSettings';
 
 const App = () => {
   return (
@@ -23,6 +24,7 @@ const App = () => {
         <Route path="/settings" element={<Settings />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/create-post" element={<CreatePost />} />
+        <Route path="/user-settings" element={<UserSettings />} />
       </Routes>
     </Router>
   );

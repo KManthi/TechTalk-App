@@ -41,7 +41,7 @@ const NotificationsPage = () => {
     }
   };
 
-  // Handle infinite scroll
+
   const handleLoadMore = () => {
     const nextPage = Math.ceil(notifications.length / 10) + 1;
     fetchNotifications(nextPage);

@@ -12,7 +12,6 @@ const PostCreationForm = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Fetch existing tags
         const fetchTags = async () => {
             try {
                 const response = await axios.get(`${baseUrl}/tags`);

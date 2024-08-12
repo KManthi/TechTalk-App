@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Spinner from './Spinner'; 
 import NavigationBar from './NavigationBar';
-import PostActions from './PostActions'; // Import PostActions component
+import PostActions from './PostActions'; 
 
 const baseUrl = 'http://127.0.0.1:5555';
 
@@ -101,7 +101,7 @@ const Explore = () => {
                                     <small>Posted by {post.author} on {new Date(post.created_at).toLocaleString()}</small>
                                     <PostActions
                                         post={post}
-                                        fetchPosts={() => fetchExploreData()} // Use a method to refetch posts if needed
+                                        fetchPosts={() => fetchExploreData()} 
                                         onPostUpdate={handlePostUpdate}
                                     />
                                     {post.isExpanded && (

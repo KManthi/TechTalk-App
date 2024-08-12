@@ -4,7 +4,7 @@ import '../index.css';
 import axios from 'axios';
 
 const Settings = () => {
-  // Existing states
+  
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [notifyLikes, setNotifyLikes] = useState(true);
   const [notifyComments, setNotifyComments] = useState(true);
@@ -21,7 +21,7 @@ const Settings = () => {
     music: false,
   });
 
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate(); 
 
   useEffect(() => {
     if (theme === 'system') {
@@ -57,10 +57,8 @@ const Settings = () => {
     try {
       const response = await axios.post('http://localhost:3000/settings', settings);
       console.log(response.data);
-      // You can add a success message or redirection here if needed
     } catch (error) {
       console.error('Error saving settings:', error);
-      // You can add an error message here if needed
     }
   };
 

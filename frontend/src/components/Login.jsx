@@ -9,7 +9,7 @@ function Login() {
   });
 
   const [error, setError] = useState('');
-  const navigate = useNavigate(); // Updated to useNavigate
+  const navigate = useNavigate(); 
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -25,12 +25,11 @@ function Login() {
       const response = await axios.post('https://techtalk-app.onrender.com/login', formData);
       const { token } = response.data;
 
-      // Save the token to localStorage or context
+      
       localStorage.setItem('authToken', token);
 
       setError('');
-      // Redirect to home page after successful login
-      navigate('/home'); // Updated to use navigate
+      navigate('/home');
     } catch (err) {
       setError('Login failed. Please check your credentials and try again.');
     }

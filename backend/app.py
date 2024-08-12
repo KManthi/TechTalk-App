@@ -7,6 +7,7 @@ from models import db, UserProfile, Rating, Post, User, Notifications, UserFavou
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 from flask_cors import CORS
 
 load_dotenv()
@@ -24,6 +25,7 @@ UPLOAD_FOLDER = 'upload_folder'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'docx'}
 
 blacklist = set()
+expires = timedelta(hours=24)
 
 @jwt.token_in_blocklist_loader
 def check_if_token_in_blacklist(jwt_header, jwt_payload):
@@ -51,7 +53,7 @@ def login():
     
     user = User.query.filter_by(username=username).first()
     if user and user.check_password(password):
-        access_token = create_access_token(identity=user.id)
+        access_token = create_access_token(identity=user.id, expires_delta=expires)
         refresh_token = create_refresh_token(identity=user.id)
         return {
             'access_token': access_token,
@@ -225,8 +227,27 @@ class UserProfileByID(Resource):
             db.session.rollback()
             return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
         
+class MyProfile(Resource):
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        if not user:
+            return make_response(jsonify({'message': 'User not found'}), 404)
+
+        user_profile = UserProfile.query.filter_by(user_id=user_id).first()
+        if not user_profile:
+            return make_response(jsonify({'message': 'User profile not found'}), 404)
+
+        response = {
+            'user': user.to_dict(),
+            'user_profile': user_profile.to_dict()
+        }
+        return make_response(jsonify(response), 200)
+        
 api.add_resource(UserProfiles, '/userprofiles')
 api.add_resource(UserProfileByID, '/userprofiles/<int:id>')
+api.add_resource(MyProfile, '/my-profile')
 
 # Ratings resources
 class Ratings(Resource):
@@ -699,11 +720,20 @@ class PopularPosts(Resource):
         posts = Post.query.order_by(Post.likes_count.desc()).limit(5).all()
         result = [post.to_dict() for post in posts]
         return make_response(jsonify(result), 200) 
+    
+class MyPosts(Resource):
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()
+        posts = Post.query.filter_by(author_id=user_id).order_by(Post.created_at.desc()).all()
+        result = [post.to_dict() for post in posts]
+        return make_response(jsonify(result), 200)
 
 api.add_resource(PostsFromFollowedUsers, '/posts/followed')
 api.add_resource(Posts, '/posts')
 api.add_resource(PostByID, '/posts/<int:id>')
 api.add_resource(PopularPosts, '/trending-posts')
+api.add_resource(MyPosts, '/my-posts')
 
 # Categories Resources
 class Categories(Resource):
@@ -965,10 +995,18 @@ class CommentsListResource(Resource):
         except Exception as e:
             print(f"Error fetching comments: {e}")
             return {'message': 'Error fetching comments'}, 500
-
-    
+        
+class MyComments(Resource):
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()
+        comments = Comment.query.filter_by(user_id=user_id).all()
+        comments_list = [{'id': c.id, 'content': c.content} for c in comments]
+        return jsonify({'comments': comments_list})
+   
 api.add_resource(CommentResource, '/posts/<int:post_id>/comments/<int:id>')
 api.add_resource(CommentsListResource, '/posts/<int:post_id>/comments')
+api.add_resource(MyComments, '/my-comments')
 
 # Messages Resources
 class MessageResource(Resource):
