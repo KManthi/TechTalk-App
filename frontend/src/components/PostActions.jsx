@@ -1,5 +1,3 @@
-// src/components/PostActions.js
-
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -91,7 +89,7 @@ const PostActions = ({ post, fetchPosts, onPostUpdate }) => {
             });
             onPostUpdate(postId, newComment);
             setNewComment('');
-            fetchComments(postId); // Refresh comments after submission
+            fetchComments(postId); 
         } catch (error) {
             console.error('Error commenting on post:', error);
         }

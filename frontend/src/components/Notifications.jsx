@@ -11,7 +11,7 @@ const NotificationsPage = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Fetch notifications from API
+
   const fetchNotifications = async (page = 1) => {
     try {
       setLoading(true);
@@ -27,7 +27,7 @@ const NotificationsPage = () => {
     }
   };
 
-  // Mark notification as read
+  
   const markAsRead = async (id) => {
     try {
       await axios.patch(`https://techtalk-app.onrender.com/notifications/${id}`, { read: true });

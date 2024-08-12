@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import PostActions from './PostActions'; 
 import NavigationBar from './NavigationBar'; 
-import Spinner from './Spinner'; // Import the Spinner component
+import Spinner from './Spinner'; 
 
 const baseUrl = 'http://127.0.0.1:5555';
 

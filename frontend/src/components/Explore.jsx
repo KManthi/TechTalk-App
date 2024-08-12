@@ -8,12 +8,14 @@ const Explore = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const baseUrl = 'http://127.0.0.1:5555';
+
   useEffect(() => {
     const fetchExploreData = async () => {
       try {
-        const postsResponse = await axios.get('https://techtalk-app.onrender.com/api/trending-posts');
-        const tagsResponse = await axios.get('https://techtalk-app.onrender.com/api/popular-tags');
-        const usersResponse = await axios.get('https://techtalk-app.onrender.com/api/recommended-users');
+        const postsResponse = await axios.get(`${baseUrl}/trending-posts`);
+        const tagsResponse = await axios.get(`${baseUrl}/popular-tags`);
+        const usersResponse = await axios.get(`${baseUrl}/recommended-users`);
 
         setTrendingPosts(postsResponse.data);
         setPopularTags(tagsResponse.data);
@@ -30,7 +32,7 @@ const Explore = () => {
 
   const handleFollow = async (userId) => {
     try {
-      await axios.post(`https://techtalk-app.onrender.com/api/follow/${userId}`);
+      await axios.post(`${baseUrl}/follow/${userId}`);
       alert(`Followed user with ID: ${userId}`);
     } catch (error) {
       alert('Failed to follow user.');
