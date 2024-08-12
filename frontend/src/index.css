@@ -622,3 +622,46 @@ input[type="time"] {
 @keyframes l12 { 
   100% { transform: rotate(.5turn); }
 }
+
+
+.home-container {
+  padding: 20px;
+}
+
+.post-card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  padding: 15px;
+  transition: transform 0.2s;
+}
+
+.post-card:hover {
+  transform: translateY(-5px);
+}
+
+.post-card h2 {
+  margin-top: 0;
+  cursor: pointer;
+}
+
+.expanded-content {
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
+}
+
+.comment-section {
+  margin-top: 15px;
+}
+
+.comment {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.comment:last-child {
+  border-bottom: none;
+}

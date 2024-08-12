@@ -143,10 +143,17 @@ class CheckPasswordResource(Resource):
             return {'message': 'Password is correct'}, 200
         else:
             return {'message': 'Incorrect password'}, 401
+        
+class RecommendedUSers(Resource):
+    def get(self):
+        users = User.query.filter_by(is_admin=False).order_by(User.followers_count.desc()).limit(10).all()
+        result = [user.to_dict() for user in users]
+        return make_response(jsonify(result), 200)
 
 api.add_resource(UserResource, '/users')
 api.add_resource(SpecificUser, '/users/<int:id>')
 api.add_resource(CheckPasswordResource, '/users/<int:id>/check_password')
+api.add_resource(RecommendedUSers, '/recommended-users')
 
 # UserProfile Resources
 class UserProfiles(Resource):
@@ -240,8 +247,8 @@ class Ratings(Resource):
 
         existing_rating = Rating.query.filter_by(post_id=post_id, user_id=user_id).first()
         if existing_rating:
-            # Optionally, update the existing rating instead of returning an error
-            return self.put(post_id, existing_rating.id)  # Call put method to update the rating
+            
+            return self.put(post_id, existing_rating.id)  
         
         try:
             if status == 'like':
@@ -271,7 +278,7 @@ class Ratings(Resource):
 
         user_id = get_jwt_identity()
 
-        # If id is provided, update the specific rating
+        
         if id:
             rating = Rating.query.filter_by(post_id=post_id, id=id).first()
             if not rating:
@@ -280,7 +287,7 @@ class Ratings(Resource):
             if rating.user_id != user_id:
                 return make_response(jsonify({'message': 'Forbidden: You are not authorized to update this rating'}), 403)
 
-            # Update post counts
+            
             post = Post.query.get(post_id)
             if rating.status == 'like':
                 post.likes_count -= 1
@@ -297,7 +304,7 @@ class Ratings(Resource):
 
             return make_response(jsonify({'message': 'Rating updated', 'rating': rating.to_dict()}), 200)
         
-        # No id provided, create a new rating (POST logic)
+        
         return self.post()
 
     @jwt_required()
@@ -686,10 +693,17 @@ class PostsFromFollowedUsers(Resource):
         result = [post.to_dict() for post in posts]
 
         return make_response(jsonify(result), 200)
+    
+class PopularPosts(Resource):
+    def get(self):
+        posts = Post.query.order_by(Post.likes_count.desc()).limit(5).all()
+        result = [post.to_dict() for post in posts]
+        return make_response(jsonify(result), 200) 
 
 api.add_resource(PostsFromFollowedUsers, '/posts/followed')
 api.add_resource(Posts, '/posts')
 api.add_resource(PostByID, '/posts/<int:id>')
+api.add_resource(PopularPosts, '/trending-posts')
 
 # Categories Resources
 class Categories(Resource):
@@ -1092,6 +1106,8 @@ class TagListResource(Resource):
         tags = Tag.query.all()
         result = [tag.to_dict() for tag in tags]
         return make_response(jsonify(result), 200)
+    
+
 
 api.add_resource(TagResource, '/tags', '/tags/<int:id>')
 api.add_resource(TagListResource, '/tags')

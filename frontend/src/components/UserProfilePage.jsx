@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 
 const UserProfilePage = () => {
   const [user, setUser] = useState(null);
+  const [activeSection, setActiveSection] = useState('posts'); // Default to 'posts'
 
-  
   const fetchUserData = async () => {
     
     const userData = {
@@ -46,37 +46,54 @@ const UserProfilePage = () => {
         <p className="profile-following">Following: {user.following}</p>
       </div>
       <hr className="section-divider" />
-      <div className="profile-posts">
-        <h2>Posts</h2>
-        <ul>
-          {user.posts.map((post) => (
-            <li key={post.id} className="post-item">
-              <h3>{post.title}</h3>
-              <p>{post.content}</p>
-            </li>
-          ))}
-        </ul>
+
+      <div className="profile-nav">
+        <button onClick={() => setActiveSection('posts')} className={activeSection === 'posts' ? 'active' : ''}>Posts</button>
+        <button onClick={() => setActiveSection('favorites')} className={activeSection === 'favorites' ? 'active' : ''}>Favorite Posts</button>
+        <button onClick={() => setActiveSection('followers')} className={activeSection === 'followers' ? 'active' : ''}>Followers</button>
       </div>
-      <div className="profile-favorites">
-        <h2>Favorite Posts</h2>
-        <ul>
-          {user.favoritePosts.map((post) => (
-            <li key={post.id} className="favorite-post-item">
-              <h3>{post.title}</h3>
-              <p>{post.content}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="profile-followers-list">
-        <h2>Followers</h2>
-        <ul>
-          {user.followerList.map((follower) => (
-            <li key={follower.id} className="follower-item">
-              {follower.username}
-            </li>
-          ))}
-        </ul>
+
+      <div className="profile-content">
+        {activeSection === 'posts' && (
+          <div className="profile-posts">
+            <h2>Posts</h2>
+            <ul>
+              {user.posts.map((post) => (
+                <li key={post.id} className="post-item">
+                  <h3>{post.title}</h3>
+                  <p>{post.content}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {activeSection === 'favorites' && (
+          <div className="profile-favorites">
+            <h2>Favorite Posts</h2>
+            <ul>
+              {user.favoritePosts.map((post) => (
+                <li key={post.id} className="favorite-post-item">
+                  <h3>{post.title}</h3>
+                  <p>{post.content}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {activeSection === 'followers' && (
+          <div className="profile-followers-list">
+            <h2>Followers</h2>
+            <ul>
+              {user.followerList.map((follower) => (
+                <li key={follower.id} className="follower-item">
+                  {follower.username}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

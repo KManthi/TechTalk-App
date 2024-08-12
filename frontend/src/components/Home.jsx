@@ -43,7 +43,7 @@ const HomeComponent = () => {
         ));
     };
 
-    if (loading) return <Spinner />; // Show spinner while loading
+    if (loading) return <Spinner />; 
     if (error) return <p>Error: {error}</p>;
 
     return (

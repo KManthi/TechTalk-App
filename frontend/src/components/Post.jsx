@@ -45,7 +45,7 @@ const PostCreationForm = () => {
             setTitle('');
             setContent('');
             setSelectedTags([]);
-            navigate('/home'); // Redirect to Home page after successful creation
+            navigate('/home'); 
         } catch (error) {
             console.error('Error creating post:', error);
         }
