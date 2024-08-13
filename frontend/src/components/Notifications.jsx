@@ -54,35 +54,48 @@ const NotificationsPage = () => {
   return (
     <div className="notifications-page">
       <header>
-        <button onClick={() => navigate('/home')}>Return to Home</button>
+        <button className="back-home btn btn-lg text-uppercase animate_btn" onClick={() => navigate('/')}>Home</button>
       </header>
-      <h2>Notifications</h2>
-      {error && <p className="error">{error}</p>}
-      {notifications.length === 0 && !loading && <p>No notifications yet.</p>}
-      <InfiniteScroll
-        dataLength={notifications.length}
-        next={handleLoadMore}
-        hasMore={hasMore}
-        loader={<p>Loading...</p>}
-      >
-        <ul>
-          {notifications.map(notification => (
-            <li
-              key={notification.id}
-              style={{ backgroundColor: notification.read ? 'white' : '#f0f0f0' }}
-              onClick={() => markAsRead(notification.id)}
-            >
-              <div>
-                <strong>{notification.user}</strong>
-                {notification.type === 'comment' && <p>{notification.content}</p>}
-                <p>{formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true })}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </InfiniteScroll>
-    </div>
-  );
-};
+      <div className="jumbotron">
+            <div className="container">
+            <div class="news-container">
+                <div class="news-headline">
+                  NOTIFICATION
+                </div> 
+            </div>
+              {error && <p className="error">{error}</p>}
+              {notifications.length === 0 && !loading && <p>No notifications yet.</p>}
+              <InfiniteScroll
+                dataLength={notifications.length}
+                next={handleLoadMore}
+                hasMore={hasMore}
+                loader={<div class="loading-container">
+                  <span class="loading-text">Loading</span>
+                  <span class="dot">.</span>
+                  <span class="dot">.</span>
+                  <span class="dot">.</span>
+              </div>}
+              >
+                <ul>
+                  {notifications.map(notification => (
+                    <li
+                      key={notification.id}
+                      style={{ backgroundColor: notification.read ? 'white' : '#f0f0f0' }}
+                      onClick={() => markAsRead(notification.id)}
+                    >
+                      <div>
+                        <strong>{notification.user}</strong>
+                        {notification.type === 'comment' && <p>{notification.content}</p>}
+                        <p>{formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true })}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </InfiniteScroll>
+            </div>
+            </div>
+            </div>
+          );
+        };
 
-export default NotificationsPage;
+    export default NotificationsPage;

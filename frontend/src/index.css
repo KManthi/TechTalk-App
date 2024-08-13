@@ -9,27 +9,40 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
 }
 
-/* NavigationBar */
-.navbar {
-  background-color: #4CAF50;
-  padding: 15px;
-  text-align: center;
-  color: white;
+/* Jumbotron Animation */
+.jumbotron .display-3 span {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeOutRight 0.6s forwards;
 }
 
-.navbar a {
-  color: white;
-  text-decoration: none;
-  margin: 0 15px;
-  font-size: 18px;
+@keyframes fadeOutRight {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.navbar a:hover {
-  text-decoration: underline;
+.jumbotron .display-3 span {
+  animation: fadeOutRight 6s forwards;
+  animation-iteration-count: infinite;
 }
+
+.jumbotron .display-3 span:nth-child(1) { animation-delay: 0.3s; }
+
+.jumbotron p {
+  font-size: 1.95rem;
+}
+
+/* Form Styling */
+.form-signin {
+  max-width: 400px;
+  margin: auto;
+}
+
 
 /* Explore Page */
 .explore-container {
@@ -60,176 +73,70 @@ body {
   background-color: #45a049;
 }
 
-.horizontal-bar button:hover {
-  background-color: #45a049;
-}
+/* Other existing styles */
 
-.trending-posts, .discover-people {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.post-card, .user-card {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+/* Footer Styling */
+footer {
+  background-color: #343a40;
+  color: #fff;
   padding: 20px;
-  transition: transform 0.2s ease;
-}
-
-.post-card:hover, .user-card:hover {
-  transform: scale(1.05);
-}
-
-.post-card h3 {
-  margin: 0;
-  font-size: 1.5em;
-}
-
-.post-card p {
-  margin: 10px 0;
-  color: #666;
-}
-
-.post-card small {
-  display: block;
-  color: #999;
-  margin-top: 10px;
-}
-
-.user-card span {
-  font-size: 1.2em;
-}
-
-.user-card button {
-  background-color: #4CAF50;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.user-card button:hover {
-  background-color: #45a049;
-}
-
-/* Signup Page */
-.signup {
-  max-width: 400px;
-  margin: 50px auto;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
+  height: 50px;
 }
 
-.signup h2 {
-  margin-bottom: 20px;
-  color: #333;
+footer p {
+  margin: 0;
 }
 
-.signup .form-group {
-  margin-bottom: 20px;
-  text-align: left;
+/* Additional responsive design styles */
+@media (max-width: 767px) {
+  .form-signin {
+    padding: 20px;
+  }
+
+  .jumbotron {
+    padding: 20px;
+  }
 }
 
-.signup .form-group label {
-  font-weight: bold;
-  display: block;
-  margin-bottom: 5px;
-}
 
-.signup .form-group input {
-  width: 100%;
+/* Settings CSS */
+.settings {
   padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  max-width: 800px;
+  margin: auto;
+  font-family: Arial, sans-serif;
+  background-color:#000;
+}
+
+.settings h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color:#fff;
+  font-size:35px;
+}
+
+/* Sign-up Button Styling */
+.btn_signup {
   font-size: 16px;
-  transition: border-color 0.3s ease;
-}
-
-.signup .form-group input:focus {
-  border-color: #4CAF50;
-}
-
-.signup button {
-  width: 100%;
-  padding: 12px;
-  background-color: #4CAF50;
-  color: white;
+  border-radius: 5px;
   border: none;
-  border-radius: 4px;
-  font-size: 16px;
+  color: #fff;
+  padding: 12px 24px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  background-color: #007bff;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.3s ease, transform 0.3s ease;
   cursor: pointer;
-  transition: background-color 0.3s ease;
 }
 
-.signup button:hover {
-  background-color: #45a049;
+/* Button Hover State */
+.btn_signup:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
 }
 
-.signup .error {
-  color: #e74c3c;
-  font-size: 0.9em;
-  margin-top: -15px;
-  margin-bottom: 20px;
-}
 
-.signup .success {
-  color: #2ecc71;
-  font-size: 0.9em;
-  margin-bottom: 20px;
-}
 
-/* PostCreationForm */
-.post-creation-form {
-  max-width: 600px;
-  margin: 50px auto;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.post-creation-form input[type="text"],
-.post-creation-form textarea,
-.post-creation-form select {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 20px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
-  transition: border-color 0.3s ease;
-}
-
-.post-creation-form textarea {
-  height: 150px;
-  resize: vertical;
-}
-
-.post-creation-form input:focus,
-.post-creation-form textarea:focus,
-.post-creation-form select:focus {
-  border-color: #4CAF50;
-}
-
-.post-creation-form button {
-  width: 100%;
-  padding: 12px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.post-creation-form button:hover {
-  background-color: #45a049;
-}
