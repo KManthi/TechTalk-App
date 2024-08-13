@@ -76,14 +76,11 @@ const Messages = () => {
     }
   };
 
-  const handleBackToHome = () => {
-    setSelectedMessage(null);
-    navigate('/home');
-  };
+
 
   return (
         <div className="messages-container">
-          <button className="back-home btn btn-lg text-uppercase animate_btn" onClick={handleBackToHome}>
+          <button className="back-home btn btn-lg text-uppercase animate_btn" onClick={() => navigate('/')}>
             Home
           </button>
           
@@ -91,7 +88,7 @@ const Messages = () => {
           <h1>Inbox</h1>
             <div className="news-container1">
               <div className="news-headline1">
-                NOTIFICATION
+                MESSAGES
               </div> 
               
               </div>
