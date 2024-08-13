@@ -7,6 +7,7 @@ const Messages = () => {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [replyContent, setReplyContent] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true); // Added loading state
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,6 +17,8 @@ const Messages = () => {
         setMessages(response.data);
       } catch (error) {
         setError('Failed to fetch messages.');
+      } finally {
+        setLoading(false); // Stop loading once the request is complete
       }
     };
 
@@ -79,50 +82,83 @@ const Messages = () => {
   };
 
   return (
-    <div className="messages-container">
-      <button onClick={handleBackToHome}>Back to Home</button>
-
-      {!selectedMessage ? (
-        <div className="inbox">
-          <h2>Inbox</h2>
-          {messages.length > 0 ? (
-            messages.map((message) => (
-              <div
-                key={message.id}
-                className={`message-preview ${message.read ? '' : 'unread'}`}
-                onClick={() => handleOpenMessage(message)}
-              >
-                <p>
-                  <strong>{message.sender}</strong>
-                  <span>{message.subject || 'No Subject'}</span>
-                  <span>{new Date(message.timestamp).toLocaleString()}</span>
-                </p>
+        <div className="messages-container">
+          <button className="back-home btn btn-lg text-uppercase animate_btn" onClick={handleBackToHome}>
+            Home
+          </button>
+          
+          <div className="container">
+          <h1>Inbox</h1>
+            <div className="news-container1">
+              <div className="news-headline1">
+                NOTIFICATION
+              </div> 
+              
               </div>
-            ))
-          ) : (
-            <p>No messages found.</p>
-          )}
+             </div>
+        
+
+      {loading ? ( // Display "No messages found" and loading state before messages are fetched
+       
+        <div>
+        <p>No messages found.</p>
+          <p>Loading messages...</p>
         </div>
-      ) : (
-        <div className="message-view">
-          <h2>Message from {selectedMessage.sender}</h2>
-          <p>
-            <strong>Received:</strong> {new Date(selectedMessage.timestamp).toLocaleString()}
-          </p>
-          <div>{selectedMessage.body}</div>
-
-          <div className="reply-section">
-            <textarea
-              placeholder="Type your reply here..."
-              rows="4"
-              value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-            />
-            <button onClick={handleReply}>Send Reply</button>
-            {error && <div className="error">{error}</div>}
+        
+        
+      ) : error ? (
+        <p className="error">{error}</p>
+      ) : !selectedMessage ? (
+        <div className="inbox">
+          <div className="jumbotron">
+            <div className="container">
+              <h2>Inbox</h2>
+              {messages.length > 0 ? (
+                messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`message-preview ${message.read ? '' : 'unread'}`}
+                    onClick={() => handleOpenMessage(message)}
+                  >
+                    <p>
+                      <strong>{message.sender}</strong>
+                      <span>{message.subject || 'No Subject'}</span>
+                      <span>{new Date(message.timestamp).toLocaleString()}</span>
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p>No messages found.</p>
+              )}
+            </div>
           </div>
+        </div>
+        
+  
+      ) : (
+        <div className="jumbotron">
+          <div className="container">
+            <div className="message-view">
+              <h2>Message from {selectedMessage.sender}</h2>
+              <p>
+                <strong>Received:</strong> {new Date(selectedMessage.timestamp).toLocaleString()}
+              </p>
+              <div>{selectedMessage.body}</div>
 
-          <button onClick={() => handleMarkAsUnread(selectedMessage)}>Mark as Unread</button>
+              <div className="reply-section">
+                <textarea
+                  placeholder="Type your reply here..."
+                  rows="4"
+                  value={replyContent}
+                  onChange={(e) => setReplyContent(e.target.value)}
+                />
+                <button onClick={handleReply}>Send Reply</button>
+                {error && <div className="error">{error}</div>}
+              </div>
+
+              <button onClick={() => handleMarkAsUnread(selectedMessage)}>Mark as Unread</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
