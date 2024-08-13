@@ -61,7 +61,7 @@ const NotificationsPage = () => {
             <div class="news-container">
                 <div class="news-headline">
                   NOTIFICATION
-                </div>
+                </div> 
             </div>
               {error && <p className="error">{error}</p>}
               {notifications.length === 0 && !loading && <p>No notifications yet.</p>}
