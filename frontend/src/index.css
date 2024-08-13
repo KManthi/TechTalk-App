@@ -716,6 +716,7 @@ input[type="time"] {
   animation: scroll-left 15s linear infinite;
   font-family: Arial, sans-serif;
   font-size: 2.5rem;
+  font-style: italic;
   color: #333;
 }
 
