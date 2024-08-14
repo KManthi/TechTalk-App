@@ -10,6 +10,7 @@ import Settings from './components/Settings';
 import NotificationsPage from './components/Notifications';
 import CreatePost from './components/Post';
 import UserSettings from './components/UserSettings';
+import Login from './components/Login';
 
 const App = () => {
   return (
@@ -25,6 +26,7 @@ const App = () => {
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/create-post" element={<CreatePost />} />
         <Route path="/user-settings" element={<UserSettings />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
     </Router>
   );

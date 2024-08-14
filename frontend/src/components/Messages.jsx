@@ -80,7 +80,7 @@ const Messages = () => {
 
   return (
         <div className="messages-container">
-          <button className="back-home btn btn-lg text-uppercase animate_btn" onClick={() => navigate('/')}>
+          <button className="back-home btn btn-lg text-uppercase animate_btn" onClick={() => navigate('/home')}>
             Home
           </button>
           

@@ -54,7 +54,7 @@ const NotificationsPage = () => {
   return (
     <div className="notifications-page">
       <header>
-        <button className="back-home btn btn-lg text-uppercase animate_btn" onClick={() => navigate('/')}>Home</button>
+        <button className="back-home btn btn-lg text-uppercase animate_btn" onClick={() => navigate('/home')}>Home</button>
       </header>
       <div className="jumbotron">
             <div className="container">

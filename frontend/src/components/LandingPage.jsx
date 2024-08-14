@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import "../index.css";
 
 export default class WelcomePage extends Component {
@@ -7,68 +7,18 @@ export default class WelcomePage extends Component {
     super(props);
 
     this.state = {
-      username: '',
-      password: '',
-      errorMessage: '',
       redirectToSignup: false,
-      redirectToHome: false
+      redirectToHome: false,
+      redirectToLogin: false,
     };
   }
 
   componentDidMount() {
-    // Check for user details in session storage
-    const userDetails = JSON.parse(sessionStorage.getItem('userDetails'));
+    const userDetails = JSON.parse(sessionStorage.getItem("userDetails"));
     if (userDetails) {
-      this.setState({ username: userDetails.username, redirectToHome: true });
-    }
-
-    // Run the DOM manipulation code
-    const textElement = document.getElementById('text');
-    if (textElement) {
-      const text = textElement.textContent;
-      textElement.innerHTML = text.split('').map(letter => `<span>${letter}</span>`).join('');
+      this.setState({ redirectToHome: true });
     }
   }
-
-  handleLogin = async (e) => {
-    e.preventDefault();
-    const { username, password } = this.state;
-
-    if (!username || !password) {
-      this.setState({ errorMessage: 'Both fields are required.' });
-      return;
-    }
-
-    try {
-      const response = await fetch('http://127.0.0.1:5555/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        sessionStorage.setItem('userDetails', JSON.stringify({ username }));
-        this.setState({ errorMessage: '', redirectToHome: true });
-      } else {
-        this.setState({ errorMessage: data.message || 'An error occurred' });
-      }
-    } catch (error) {
-      this.setState({ errorMessage: 'An error occurred while logging in.' });
-    }
-  };
-
-  handleLogout = (e) => {
-    e.preventDefault();
-    sessionStorage.removeItem('userDetails');
-    this.setState({ username: '' });
-    window.location.href = '/signin';
-  };
-
-  handleSignupRedirect = () => {
-    this.setState({ redirectToSignup: true });
-  };
 
   render() {
     if (this.state.redirectToSignup) {
@@ -79,59 +29,55 @@ export default class WelcomePage extends Component {
       return <Navigate to="/home" />;
     }
 
+    if (this.state.redirectToLogin) {
+      return <Navigate to="/login" />;
+    }
+
     return (
       <div>
         <nav className="navbar navbar-expand-md navbar-dark bg-dark">
           <div className="container">
-            <a className="navbar-brand" href="#">TechTalk</a>
-            <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
-              <span className="navbar-toggler-icon"></span>
-            </button>
-            <div className="collapse navbar-collapse" id="navbarsExampleDefault">
-              <span className="button-container">
-                <button className="btn_signup" onClick={this.handleSignupRedirect}>Sign Up</button>
-              </span>
-            </div>
+            <a className="navbar-brand" href="#">
+              <em>TechTalk</em>
+            </a>
           </div>
         </nav>
 
-        <main role="main">
-          <div className="jumbotron">
-            <div className="container">
-              <h1 id="text" className="display-3"><span>Welcome-to-TechTalk</span></h1>
-              <p>TechTalk is a platform where technology enthusiasts can connect, share insights, and discuss the latest trends in tech.</p>
-              <p>Join our community to stay updated and collaborate with like-minded individuals.</p>
-            </div>
+        <main role="main" className="main-container">
+          <div className="welcome-container">
+            <h1 id="text" className="display-3">
+              Welcome to TechTalk
+            </h1>
+            <p>
+              TechTalk is a platform where technology enthusiasts can connect,
+              share insights, and discuss the latest trends in tech.
+            </p>
+            <p>
+              Join our community to stay updated and collaborate with
+              like-minded individuals.
+            </p>
           </div>
 
-          <div className="container">
-            <div>
-              <form onSubmit={this.handleLogin} className="form-signin">
-                <h2 className="form-signin-heading">Please sign in</h2>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Username"
-                  required
-                  onChange={(e) => this.setState({ username: e.target.value })}
-                />
-                <input
-                  type="password"
-                  className="form-control"
-                  placeholder="Password"
-                  required
-                  onChange={(e) => this.setState({ password: e.target.value })}
-                />
-                {this.state.errorMessage && <div className="error-message">{this.state.errorMessage}</div>}
-                <button className="btn btn-lg btn-primary btn-block" type="submit">Login</button>
-              </form>
+          <div className="authentication-container">
+            <h2 className="auth-heading">Login or Signup to continue</h2>
+            <div className="landing-buttons">
+            <button
+              className="btn btn-lg btn-primary btn-block"
+              type="button"
+              onClick={() => this.setState({ redirectToLogin: true })}
+            >
+              Login
+            </button>
+            <button
+              className="btn btn-lg btn-primary btn-block"
+              type="button"
+              onClick={() => this.setState({ redirectToSignup: true })}
+            >
+              Sign Up
+            </button>
             </div>
           </div>
         </main>
-
-        <footer className="container">
-          <p>&copy; TechTalk 2024</p>
-        </footer>
       </div>
     );
   }

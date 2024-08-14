@@ -65,7 +65,7 @@ const Settings = () => {
   return (
     <div className="full-container">
       <div className="home-button">
-        <button className="back-home btn btn-lg text-uppercase animate_btn" onClick={() => navigate('/')}>
+        <button className="back-home btn btn-lg text-uppercase animate_btn" onClick={() => navigate('/home')}>
           Home
         </button>
       </div>

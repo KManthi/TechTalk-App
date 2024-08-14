@@ -137,44 +137,68 @@ footer p {
   transform: translateY(-2px);
 }
 
-/* Post Creation Form Styling */
+/* Container for the post creation form */
 .post-creation-form {
-  max-width: 600px;
-  margin: auto;
-  padding: 20px;
-  background-color: #D6E6F2; 
+  max-width: 600px; /* Limit the width of the form */
+  margin: 0 auto; /* Center the form horizontally */
+  padding: 2rem;
+  background-color: #d6e6f2; /* Light background for the form */
   border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 }
 
-.post-creation-form h2 {
-  font-size: 24px;
-  color: #333;
-  margin-bottom: 20px;
+/* Input field styling */
+.post-creation-form input[type='text'],
+.post-creation-form textarea,
+.post-creation-form select {
+  width: 100%; /* Full width of the container */
+  padding: 0.75rem; /* Spacing inside the input */
+  margin-bottom: 1rem; /* Space between elements */
+  border: 1px solid #ccc; /* Border color */
+  border-radius: 5px; /* Rounded corners */
+  box-sizing: border-box; /* Include padding and border in the element's width and height */
 }
 
-.post-creation-form input,
+/* Styling for text area */
 .post-creation-form textarea {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #B9D7EA; 
-  border-radius: 4px;
-  font-size: 16px;
+  resize: vertical; /* Allow vertical resizing only */
 }
 
+/* Styling for the select dropdown */
+.post-creation-form select {
+  height: auto; /* Ensure dropdown is not too tall */
+}
+
+/* Button styling */
 .post-creation-form button {
-  background-color: #769FCD; 
-  color: white;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  width: 100%;
+  padding: 0.75rem;
   font-size: 16px;
+  color: #fff;
+  background-color: #769fcd; /* Green background */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
 .post-creation-form button:hover {
-  background-color: #B9D7EA; 
+  background-color: #0056b3; /* Darker green on hover */
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .post-creation-form {
+    padding: 1rem;
+  }
+
+  .post-creation-form input[type='text'],
+  .post-creation-form textarea,
+  .post-creation-form select,
+  .post-creation-form button {
+    font-size: 14px;
+  }
 }
 
 
@@ -182,6 +206,7 @@ footer p {
   max-width: 1260px;
   margin: auto;
   padding: 20px;
+  background-color: #5fa3ec;
   
 }
 
@@ -606,13 +631,13 @@ display: inline-block; /* Ensure buttons align properly */
 }
 /* Base Button Style */
 .btn-primary {
-  font-size: 16px;
+  font-size: 24px;
   font-weight: bold;
   width:50%;
-  border-radius: 4px; /* Rounded corners */
+  border-radius: 24px; /* Rounded corners */
   border: none; /* Remove default border */
   color: #fff; /* Text color */
-  background-color: #007bff; /* Primary background color */
+  background-color: #769fcd; /* Primary background color */
   padding: 12px 24px; /* Padding inside the button */
   text-align: center; /* Center text inside button */
   text-decoration: none; /* Remove underline from link */
@@ -814,7 +839,7 @@ cursor: pointer;
 .post-actions {
   display: flex;
   justify-content: center; 
-  gap: 20px; 
+  gap: 40px; 
   margin-top: 10px; 
 }
 
@@ -948,7 +973,7 @@ button.favorite-button {
       transform: translateX(-100%);
   }
 }
-/* LOADING */
+
 .loading-container {
   font-family: Arial, sans-serif;
   font-size: 2rem;
@@ -986,7 +1011,252 @@ button.favorite-button {
       opacity: 1;
   }
 }
-/* messages */
+
 .messages-container {
   background-color: #fcf8f7;
 }
+
+/* Main container for the welcome page */
+.main-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: calc(100vh - 56px); /* Adjust for navbar height */
+  padding: 0 2rem;
+  background-color: #f7fbfc;
+}
+
+/* Container for the welcome message */
+.welcome-container {
+  width: 45%;
+  max-width: 600px; /* Ensures container doesn't grow too wide on large screens */
+  padding: 2rem;
+  background-color: #d6e6f2;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-right: 2rem;
+  font-size: 1.5rem; /* Use rem for responsive font size */
+  overflow-wrap: break-word; /* Ensure long text wraps */
+}
+
+@media (max-width: 768px) {
+  .main-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .welcome-container,
+  .authentication-container {
+    width: 90%;
+    margin-right: 0;
+    margin-bottom: 2rem;
+  }
+}
+
+
+/* Container for the authentication section */
+.authentication-container {
+  width: 45%;
+  padding: 2rem;
+  background-color: #d6e6f2;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Styling for the authentication heading */
+.auth-heading {
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+/* Button styles */
+button.btn {
+  margin-bottom: 1rem;
+  width: 40%;
+}
+
+.landing-buttons {
+  display: flex;
+  justify-content: space-between;
+  word-wrap: break-word; 
+  overflow-wrap: break-word;
+  box-sizing: border-box; 
+}
+
+/* Container for the login page */
+.login-container{
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 2rem;
+  background-color: #d6e6f2;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* Login Page Styling */
+.login {
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 2rem;
+  background-color: #d6e6f2;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Heading for the login page */
+.login h2 {
+  margin-bottom: 1.5rem;
+  font-size: 24px;
+  color: #333;
+}
+
+/* Error and success message styling */
+.error,
+.success {
+  margin-bottom: 1rem;
+  font-size: 16px;
+}
+
+/* Error message styling */
+.error {
+  color: #d9534f;
+}
+
+/* Success message styling */
+.success {
+  color: #5bc0de;
+}
+
+/* Form group styling */
+.form-group {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+/* Labels for the input fields */
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 16px;
+  color: #333;
+}
+
+/* Input fields */
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+/* Submit button styling */
+button[type="submit"] {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 18px;
+  color: #fff;
+  background-color: #769fcd;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button[type="submit"]:hover {
+  background-color: #0056b3;
+}
+
+/* Responsive styling */
+@media (max-width: 500px) {
+  .login {
+    padding: 1.5rem;
+  }
+
+  .login h2 {
+    font-size: 20px;
+  }
+
+  .form-group input {
+    padding: 0.5rem;
+    font-size: 14px;
+  }
+
+  button[type="submit"] {
+    font-size: 16px;
+    padding: 0.5rem;
+  }
+}
+
+
+/* Container styling */
+.signup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #f4f7f9;
+  padding: 2rem;
+}
+
+h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.error, .success {
+  color: #d9534f; /* Red for error */
+  color: #5bc0de; /* Light blue for success */
+  margin: 1rem 0;
+}
+
+.signupfrm {
+  width: 100%;
+  max-width: 400px;
+  background-color: #d6e6f2;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+label {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+

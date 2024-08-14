@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 function Login() {
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
   });
 
@@ -21,43 +21,53 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(''); 
     try {
-      const response = await axios.post('https://techtalk-app.onrender.com/login', formData);
+      const response = await axios.post('http://127.0.0.1:5555/login', formData);
       const { token } = response.data;
 
       
       localStorage.setItem('authToken', token);
 
-      setError('');
+      
       navigate('/home');
     } catch (err) {
-      setError('Login failed. Please check your credentials and try again.');
+      
+      if (err.response && err.response.data) {
+        setError(err.response.data.message || 'Login failed. Please check your credentials and try again.');
+      } else {
+        setError('An unexpected error occurred. Please try again later.');
+      }
     }
   };
 
   return (
     <div className="login">
-      <h2>Login</h2>
+      <h2>Please provide your credentials</h2>
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>Email:</label>
+          <label htmlFor="username">Username:</label>
           <input
-            type="email"
-            name="email"
-            value={formData.email}
+            type="username"
+            id="username"
+            name="username"
+            value={formData.username}
             onChange={handleChange}
             required
+            autoComplete="username"
           />
         </div>
         <div className="form-group">
-          <label>Password:</label>
+          <label htmlFor="password">Password:</label>
           <input
             type="password"
+            id="password"
             name="password"
             value={formData.password}
             onChange={handleChange}
             required
+            autoComplete="current-password"
           />
         </div>
         <button type="submit">Login</button>
