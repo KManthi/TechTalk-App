@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import '../index.css'
 
 const baseUrl = 'http://127.0.0.1:5555';
 
@@ -103,19 +104,19 @@ const PostActions = ({ post, fetchPosts, onPostUpdate }) => {
         <div className='post-actions'>
             <button 
                 onClick={() => handleLike(post.id, post.liked)} 
-                className={post.liked ? 'liked' : ''}
+                className={`like-button ${post.liked ? 'liked' : ''}`}
             >
                 👍 {post.likes_count}
             </button>
             <button 
                 onClick={() => handleDislike(post.id, post.disliked)} 
-                className={post.disliked ? 'disliked' : ''}
+                className={`dislike-button ${post.disliked ? 'disliked' : ''}`}
             >
                 👎 {post.dislikes_count}
             </button>
             <button 
                 onClick={() => handleFavorite(post.id, post.favorited)} 
-                className={post.favorited ? 'favorited' : ''}
+                className={`favorite-button ${post.favorited ? 'favorited' : ''}`}
             >
                 ⭐ {post.favorites_count}
             </button>

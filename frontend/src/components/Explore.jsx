@@ -35,27 +35,6 @@ const Explore = () => {
         setActiveSection(section);
     };
 
-    const handleFollow = async (userId) => {
-        try {
-            const token = localStorage.getItem('access_token');
-            if (!token) {
-                alert('No authentication token found.');
-                return;
-            }
-
-            await axios.post(`${baseUrl}/users/me/follow/${userId}`, null, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            alert(`Followed user with ID: ${userId}`);
-        } catch (error) {
-            console.error('Error following user:', error); 
-            alert('Failed to follow user.');
-        }
-    };
-
     const handlePostUpdate = (postId, newComment) => {
         setTrendingPosts(trendingPosts.map(post =>
             post.id === postId
@@ -74,7 +53,7 @@ const Explore = () => {
     return (
         <div className="explore-container">
             <NavigationBar />
-            <div className="explore-content">
+            <div className="content-container">
                 <div className="horizontal-bar">
                     <button 
                         className={activeSection === 'trendingPosts' ? 'active' : ''} 
@@ -91,14 +70,20 @@ const Explore = () => {
                 </div>
 
                 {activeSection === 'trendingPosts' && (
-                    <section className="trending-posts">
+                    <section className="post-section">
                         <h2>Trending Posts</h2>
                         {trendingPosts.length > 0 ? (
                             trendingPosts.map((post) => (
                                 <div key={post.id} className="post-card">
-                                    <h3>{post.title}</h3>
+                                    <h3 
+                                        onClick={() => setTrendingPosts(trendingPosts.map(p => p.id === post.id ? { ...p, isExpanded: !p.isExpanded } : p))}
+                                    >
+                                        {post.title}
+                                    </h3>
                                     <p>{post.content}</p>
-                                    <small>Posted by {post.author} on {new Date(post.created_at).toLocaleString()}</small>
+                                    <div className='small-block'>
+                                        <small>Posted by {post.author} on {new Date(post.created_at).toLocaleString()}</small>
+                                    </div>
                                     <PostActions
                                         post={post}
                                         fetchPosts={() => fetchExploreData()} 
