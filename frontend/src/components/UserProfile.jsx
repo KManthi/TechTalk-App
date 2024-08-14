@@ -1,4 +1,4 @@
-import React, { useState } from 'react';  // Removed useEffect import
+import React, { useState, useEffect } from 'react';  // Removed useEffect import
 import { useNavigate, useParams } from 'react-router-dom'; 
 import axios from 'axios';
 import NavigationBar from './NavigationBar';
@@ -17,33 +17,33 @@ const UserProfile = () => {
     const { id } = useParams();
 
     // Temporarily disabled fetching profile
-    /*
-    useEffect(() => {
-        const fetchUserProfile = async () => {
-            setLoading(true);
-            try {
-                const token = localStorage.getItem('access_token');
-                if (!token) {
-                    throw new Error('No auth token found');
-                }
+    
+    // useEffect(() => {
+    //     const fetchUserProfile = async () => {
+    //         setLoading(true);
+    //         try {
+    //             const token = localStorage.getItem('access_token');
+    //             if (!token) {
+    //                 throw new Error('No auth token found');
+    //             }
 
-                const response = await axios.get(`${baseUrl}/my-profile`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                setProfile(response.data.user_profile);
-            } catch (error) {
-                setError('Failed to fetch profile.');
-                console.error('Error fetching profile:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
+    //             const response = await axios.get(`${baseUrl}/my-profile`, {
+    //                 headers: {
+    //                     'Authorization': `Bearer ${token}`
+    //                 }
+    //             });
+    //             setProfile(response.data.user_profile);
+    //         } catch (error) {
+    //             setError('Failed to fetch profile.');
+    //             console.error('Error fetching profile:', error);
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
 
-        fetchUserProfile();
-    }, [id]);
-    */
+    //     fetchUserProfile();
+    // }, [id]);
+    
 
     // Temporarily disabled fetching posts
     /*

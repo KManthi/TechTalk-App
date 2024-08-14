@@ -15,7 +15,12 @@ const NotificationsPage = () => {
   const fetchNotifications = async (page = 1) => {
     try {
       setLoading(true);
-      const response = await axios.get(`https://techtalk-app.onrender.com/notifications?page=${page}`);
+      const token = localStorage.getItem('access_token');
+      const response = await axios.get(`http://127.0.0.1:5555/notifications?page=${page}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const newNotifications = response.data;
 
       setNotifications(prev => [...prev, ...newNotifications]);
@@ -30,7 +35,7 @@ const NotificationsPage = () => {
   
   const markAsRead = async (id) => {
     try {
-      await axios.patch(`https://techtalk-app.onrender.com/notifications/${id}`, { read: true });
+      await axios.patch(`http://127.0.0.1:5555/notifications/${id}`, { read: true });
       setNotifications(prev =>
         prev.map(notification =>
           notification.id === id ? { ...notification, read: true } : notification

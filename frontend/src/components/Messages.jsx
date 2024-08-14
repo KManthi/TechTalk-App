@@ -13,12 +13,17 @@ const Messages = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const response = await axios.get('https://techtalk-app.onrender.com/api/messages');
+        const token = localStorage.getItem('access_token');
+        const response = await axios.get('http://127.0.0.1:5555/users/me/messages', {
+           headers : {
+            'Authorization': `Bearer ${token}`
+           }
+          });
         setMessages(response.data);
       } catch (error) {
         setError('Failed to fetch messages.');
       } finally {
-        setLoading(false); // Stop loading once the request is complete
+        setLoading(false); 
       }
     };
 

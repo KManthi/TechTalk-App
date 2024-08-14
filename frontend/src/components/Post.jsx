@@ -14,8 +14,13 @@ const PostCreationForm = () => {
     useEffect(() => {
         const fetchTags = async () => {
             try {
-                const response = await axios.get(`${baseUrl}/tags`);
-                setTags(response.data);
+                const token = localStorage.getItem('access_token');
+                const response = await axios.get(`${baseUrl}/tags`, {
+                   headers : {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            setTags(response.data);
             } catch (error) {
                 console.error('Error fetching tags:', error);
             }

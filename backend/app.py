@@ -979,18 +979,16 @@ class CommentsListResource(Resource):
         db.session.commit()
         return make_response(jsonify({'message': 'Comment created successfully'}), 201)
     
-    def get(self, post_id):
-        page = request.args.get('page', 1, type=int)  
-        per_page = request.args.get('per_page', 10, type=int)  
+    def get(self, post_id):  
 
         try:
-            comments = Comment.query.filter_by(post_id=post_id).paginate(page, per_page, error_out=False)
-            comments_list = [{'id': c.id, 'content': c.content} for c in comments.items]
+            comments = Comment.query.filter_by(post_id=post_id).all()
+            comments_list = [{'id': c.id, 'content': c.content} for c in comments]
             return jsonify({
                 'comments': comments_list,
-                'total': comments.total,
-                'pages': comments.pages,
-                'current_page': comments.page
+                'total': len(comments),
+                'pages': 1,  # No pagination, so always 1 page
+                'current_page': 1  # No pagination, so current page is always 1
             })
         except Exception as e:
             print(f"Error fetching comments: {e}")
