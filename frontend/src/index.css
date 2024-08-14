@@ -2,7 +2,7 @@ body {
   font-family: 'Arial', sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f4f4f9;
+  background-color: #F7FBFC; /* Updated to match palette */
   color: #333;
 }
 
@@ -59,7 +59,7 @@ body {
 }
 
 .horizontal-bar button {
-  background-color: #4CAF50;
+  background-color: #769FCD; 
   color: white;
   padding: 10px 20px;
   border: none;
@@ -70,10 +70,9 @@ body {
 }
 
 .horizontal-bar button.active {
-  background-color: #45a049;
+  background-color: #B9D7EA; 
 }
 
-/* Other existing styles */
 
 /* Footer Styling */
 footer {
@@ -125,7 +124,7 @@ footer p {
   padding: 12px 24px;
   font-weight: 700;
   letter-spacing: 1px;
-  background-color: #007bff;
+  background-color: #007bff; 
   position: relative;
   overflow: hidden;
   transition: background-color 0.3s ease, transform 0.3s ease;
@@ -138,5 +137,42 @@ footer p {
   transform: translateY(-2px);
 }
 
+/* Post Creation Form Styling */
+.post-creation-form {
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+  background-color: #D6E6F2; 
+  border-radius: 8px;
+}
 
+.post-creation-form h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+}
 
+.post-creation-form input,
+.post-creation-form textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #B9D7EA; 
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.post-creation-form button {
+  background-color: #769FCD; 
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.post-creation-form button:hover {
+  background-color: #B9D7EA; 
+}
