@@ -49,7 +49,7 @@ export default class WelcomePage extends Component {
               Welcome to TechTalk
             </h1>
             <p>
-              TechTalk is a platform where technology enthusiasts can connect,
+              A platform where technology enthusiasts can connect,
               share insights, and discuss the latest trends in tech.
             </p>
             <p>
