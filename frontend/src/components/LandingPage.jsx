@@ -1,15 +1,13 @@
 import React, { Component } from "react";
-import { Navigate } from "react-router-dom";
-import "../index.css";
+import { Navigate, Link } from "react-router-dom";
+import "../styles.css";
 
 export default class WelcomePage extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      redirectToSignup: false,
       redirectToHome: false,
-      redirectToLogin: false,
     };
   }
 
@@ -21,25 +19,23 @@ export default class WelcomePage extends Component {
   }
 
   render() {
-    if (this.state.redirectToSignup) {
-      return <Navigate to="/signup" />;
-    }
-
     if (this.state.redirectToHome) {
       return <Navigate to="/home" />;
     }
 
-    if (this.state.redirectToLogin) {
-      return <Navigate to="/login" />;
-    }
-
     return (
-      <div>
-        <nav className="navbar navbar-expand-md navbar-dark bg-dark">
-          <div className="container">
-            <a className="navbar-brand" href="#">
-              <em>TechTalk</em>
-            </a>
+      <div className="landing-page">
+        <nav className="top-landing">
+          <div className="landing-container">
+            <Link className="navbar-link" to="/about">
+              About
+            </Link>
+              <Link className="navbar-link" to="/login">
+                Login
+              </Link>
+              <Link className="navbar-link" to="/signup">
+                Sign Up
+              </Link>
           </div>
         </nav>
 
@@ -56,26 +52,6 @@ export default class WelcomePage extends Component {
               Join our community to stay updated and collaborate with
               like-minded individuals.
             </p>
-          </div>
-
-          <div className="authentication-container">
-            <h2 className="auth-heading">Login or Signup to continue</h2>
-            <div className="landing-buttons">
-            <button
-              className="btn btn-lg btn-primary btn-block"
-              type="button"
-              onClick={() => this.setState({ redirectToLogin: true })}
-            >
-              Login
-            </button>
-            <button
-              className="btn btn-lg btn-primary btn-block"
-              type="button"
-              onClick={() => this.setState({ redirectToSignup: true })}
-            >
-              Sign Up
-            </button>
-            </div>
           </div>
         </main>
       </div>

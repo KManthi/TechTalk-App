@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import "../styles.css";
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -43,9 +44,11 @@ function Login() {
 
   return (
     <div className="login">
+      <div className='login-container'>
       <h2>Please provide your credentials</h2>
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
+        <div className="login-form-content">
         <div className="form-group">
           <label htmlFor="username">Username:</label>
           <input
@@ -70,8 +73,12 @@ function Login() {
             autoComplete="current-password"
           />
         </div>
-        <button type="submit">Login</button>
+        <div className='login-button-wrapper'>
+        <button className='login-button' type="submit">Login</button>
+        </div>
+        </div>
       </form>
+      </div>
     </div>
   );
 }

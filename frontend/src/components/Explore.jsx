@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Spinner from './Spinner'; 
 import NavigationBar from './NavigationBar';
-import PostActions from './PostActions'; 
+import PostCard from './PostCard'; 
+import MessagesBar from './MessagesBar';
+import '../styles.css'; 
 
 const baseUrl = 'http://127.0.0.1:5555';
+const defaultProfilePic = 'https://via.placeholder.com/150';
 
 const Explore = () => {
     const [trendingPosts, setTrendingPosts] = useState([]);
@@ -67,24 +70,28 @@ const Explore = () => {
                     >
                         Discover People
                     </button>
+                    <div className={`bar-indicator ${activeSection === 'trendingPosts' ? 'trending-posts-bar' : 'discover-people-bar'}`}
+                     />
                 </div>
 
                 {activeSection === 'trendingPosts' && (
                     <section className="post-section">
-                        <h2>Trending Posts</h2>
                         {trendingPosts.length > 0 ? (
                             trendingPosts.map((post) => (
                                 <div key={post.id} className="post-card">
-                                    <h3 
-                                        onClick={() => setTrendingPosts(trendingPosts.map(p => p.id === post.id ? { ...p, isExpanded: !p.isExpanded } : p))}
-                                    >
-                                        {post.title}
-                                    </h3>
+                                    <div className="post-header">
+                                        <img src={post.profile_pic || 'https://via.placeholder.com/150'} alt='Profile' className='profile-pic' />
+                                        <h3 
+                                            onClick={() => setTrendingPosts(trendingPosts.map(p => p.id === post.id ? { ...p, isExpanded: !p.isExpanded } : p))}
+                                        >
+                                            {post.title}
+                                        </h3>
+                                    </div>
                                     <p>{post.content}</p>
                                     <div className='small-block'>
                                         <small>Posted by {post.author} on {new Date(post.created_at).toLocaleString()}</small>
                                     </div>
-                                    <PostActions
+                                    <PostCard
                                         post={post}
                                         fetchPosts={() => fetchExploreData()} 
                                         onPostUpdate={handlePostUpdate}
@@ -112,10 +119,14 @@ const Explore = () => {
 
                 {activeSection === 'discoverPeople' && (
                     <section className="discover-people">
-                        <h2>Discover People</h2>
                         {recommendedUsers.length > 0 ? (
                             recommendedUsers.map((user) => (
                                 <div key={user.id} className="user-card">
+                                    <img 
+                                        src={user.profile_pic || defaultProfilePic}
+                                        alt="Profile"
+                                        className="user-profile-pic"
+                                    />
                                     <span>{user.username}</span>
                                     <button onClick={() => handleFollow(user.id)}>Follow</button>
                                 </div>
@@ -126,6 +137,7 @@ const Explore = () => {
                     </section>
                 )}
             </div>
+            <MessagesBar messages="" />
         </div>
     );
 };

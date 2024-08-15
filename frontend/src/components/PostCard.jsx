@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import '../index.css'
+import '../styles.css';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTags, faThumbsUp, faThumbsDown, faStar, faComment } from '@fortawesome/free-solid-svg-icons';
 
 const baseUrl = 'http://127.0.0.1:5555';
 
-const PostActions = ({ post, fetchPosts, onPostUpdate }) => {
+const PostCard = ({ post, fetchPosts, onPostUpdate }) => {
     const [newComment, setNewComment] = useState('');
     const [comments, setComments] = useState([]);
     const [isExpanded, setIsExpanded] = useState(false);
@@ -107,29 +109,37 @@ const PostActions = ({ post, fetchPosts, onPostUpdate }) => {
 
     return (
         <div className='post-actions'>
+            <div className='tags-icon-container'>
+            <FontAwesomeIcon icon={faTags} className='tags-icon' />
+            <div className='tags-hover'>
+                {post.tags && post.tags.map((tag) => (
+                    <span key={tag.id} className='tag'>{tag.name}</span>
+                ))}
+            </div>
+            </div>
             <button 
                 onClick={() => handleLike(post.id, post.liked)} 
                 className={`like-button ${post.liked ? 'liked' : ''}`}
             >
-                👍 {post.likes_count}
+                <FontAwesomeIcon icon={faThumbsUp} className="glow-effect" /> {post.likes_count}
             </button>
             <button 
                 onClick={() => handleDislike(post.id, post.disliked)} 
                 className={`dislike-button ${post.disliked ? 'disliked' : ''}`}
             >
-                👎 {post.dislikes_count}
+                <FontAwesomeIcon icon={faThumbsDown} className="glow-effect"/> {post.dislikes_count}
             </button>
             <button 
                 onClick={() => handleFavorite(post.id, post.favorited)} 
                 className={`favorite-button ${post.favorited ? 'favorited' : ''}`}
             >
-                ⭐ {post.favorites_count}
+                <FontAwesomeIcon icon={faStar} className="glow-effect" /> {post.favorites_count}
             </button>
             <button 
                 onClick={() => toggleCommentForm()} 
                 className='comment-bubble'
             >
-                💬 {post.comments_count || 0}
+                <FontAwesomeIcon icon={faComment} /> {post.comments_count || 0}
             </button>
             {isFormVisible && (
                 <div className='comment-form'>
@@ -155,4 +165,4 @@ const PostActions = ({ post, fetchPosts, onPostUpdate }) => {
     );
 };
 
-export default PostActions;
+export default PostCard;

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import PostActions from './PostActions';
+import PostCard from './PostCard';
 import NavigationBar from './NavigationBar';
 import Spinner from './Spinner';
+import MessagesBar from './MessagesBar';
+import '../styles.css';
 
 const baseUrl = 'http://127.0.0.1:5555';
 
@@ -10,6 +12,7 @@ const HomeComponent = () => {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [postIdBeingFetched, setPostIdBeingFetched] = useState(null);
 
     useEffect(() => {
         fetchPosts();
@@ -32,6 +35,8 @@ const HomeComponent = () => {
     };
 
     const fetchComments = async (postId) => {
+        if (postIdBeingFetched === postId) return; 
+        setPostIdBeingFetched(postId);
         try {
             const response = await axios.get(`${baseUrl}/posts/${postId}/comments`, {
                 headers: {
@@ -45,6 +50,8 @@ const HomeComponent = () => {
             ));
         } catch (error) {
             console.error('Error fetching comments:', error);
+        } finally {
+            setPostIdBeingFetched(null);
         }
     };
 
@@ -79,21 +86,28 @@ const HomeComponent = () => {
         <div className='home-container'>
             <NavigationBar />
             <div className='content-container'>
-                <main>
-                    <h1>Home Page</h1>
+                <main className='main-home-container'>
+                    <h1 className='home-title'>Timeline</h1>
                     {posts.length === 0 ? (
                         <p>No posts found, try following some users.</p>
                     ) : (
                         posts.map(post => (
                             <div key={post.id} className='post-card'>
-                                <h2 onClick={() => handlePostTitleClick(post.id)}>
-                                    {post.title}
-                                </h2>
+                                <div className='post-header'>
+                                    <img 
+                                        src={post.profile_pic || 'https://via.placeholder.com/150'} 
+                                        alt={post.author || 'Profile picture'} 
+                                        className='profile-pic' 
+                                    />
+                                    <h2 onClick={() => handlePostTitleClick(post.id)}>
+                                        {post.title}
+                                    </h2>
+                                </div>
                                 <p>{post.content}</p>
                                 <div className='small-block'>
                                     <small>Posted by {post.author} on {new Date(post.created_at).toLocaleString()}</small>
                                 </div>
-                                <PostActions
+                                <PostCard
                                     post={post}
                                     fetchPosts={fetchPosts}
                                     onPostUpdate={handlePostUpdate}
@@ -116,6 +130,7 @@ const HomeComponent = () => {
                     )}
                 </main>
             </div>
+            <MessagesBar messages="" />
         </div>
     );
 };
