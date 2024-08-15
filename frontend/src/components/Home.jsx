@@ -31,6 +31,35 @@ const HomeComponent = () => {
         }
     };
 
+    const fetchComments = async (postId) => {
+        try {
+            const response = await axios.get(`${baseUrl}/posts/${postId}/comments`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
+            });
+            setPosts(posts.map(post =>
+                post.id === postId
+                    ? { ...post, comments: response.data }
+                    : post
+            ));
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+        }
+    };
+
+    const handlePostTitleClick = (postId) => {
+        setPosts(posts.map(post => {
+            if (post.id === postId) {
+                if (!post.isExpanded) {
+                    fetchComments(postId);
+                }
+                return { ...post, isExpanded: !post.isExpanded };
+            }
+            return post;
+        }));
+    };
+
     const handlePostUpdate = (postId, newComment) => {
         setPosts(posts.map(post =>
             post.id === postId
@@ -57,12 +86,12 @@ const HomeComponent = () => {
                     ) : (
                         posts.map(post => (
                             <div key={post.id} className='post-card'>
-                                <h2 onClick={() => setPosts(posts.map(p => p.id === post.id ? { ...p, isExpanded: !p.isExpanded } : p))}>
+                                <h2 onClick={() => handlePostTitleClick(post.id)}>
                                     {post.title}
                                 </h2>
                                 <p>{post.content}</p>
                                 <div className='small-block'>
-                                <small>Posted by {post.author} on {new Date(post.created_at).toLocaleString()}</small>
+                                    <small>Posted by {post.author} on {new Date(post.created_at).toLocaleString()}</small>
                                 </div>
                                 <PostActions
                                     post={post}

@@ -7,7 +7,7 @@ from models import db, UserProfile, Rating, Post, User, Notifications, UserFavou
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
+from datetime import timedelta
 from flask_cors import CORS
 
 load_dotenv()
@@ -17,10 +17,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+
 db.init_app(app)
 migrate = Migrate(app, db)
 api = Api(app)
 jwt = JWTManager(app)
+
 UPLOAD_FOLDER = 'upload_folder'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'docx'}
 
@@ -270,10 +272,11 @@ class Ratings(Resource):
 
         existing_rating = Rating.query.filter_by(post_id=post_id, user_id=user_id).first()
         if existing_rating:
-            
-            return self.put(post_id, existing_rating.id)  
+            # Update the existing rating
+            return self.put(post_id, existing_rating.id)
         
         try:
+            # Adjust the post's like/dislike count
             if status == 'like':
                 post.likes_count += 1
             elif status == 'dislike':
@@ -301,17 +304,16 @@ class Ratings(Resource):
 
         user_id = get_jwt_identity()
 
+        rating = Rating.query.filter_by(post_id=post_id, id=id).first()
+        if not rating:
+            return make_response(jsonify({'message': 'Rating not found'}), 404)
         
-        if id:
-            rating = Rating.query.filter_by(post_id=post_id, id=id).first()
-            if not rating:
-                return make_response(jsonify({'message': 'Rating not found'}), 404)
-            
-            if rating.user_id != user_id:
-                return make_response(jsonify({'message': 'Forbidden: You are not authorized to update this rating'}), 403)
-
-            
+        if rating.user_id != user_id:
+            return make_response(jsonify({'message': 'Forbidden: You are not authorized to update this rating'}), 403)
+        
+        try:
             post = Post.query.get(post_id)
+            # Update the post's like/dislike counts
             if rating.status == 'like':
                 post.likes_count -= 1
             elif rating.status == 'dislike':
@@ -326,9 +328,9 @@ class Ratings(Resource):
             db.session.commit()
 
             return make_response(jsonify({'message': 'Rating updated', 'rating': rating.to_dict()}), 200)
-        
-        
-        return self.post()
+        except Exception as e:
+            db.session.rollback()
+            return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
 
     @jwt_required()
     def delete(self, post_id, id):
@@ -379,10 +381,26 @@ class RatingByPost(Resource):
         if rating.user_id != user_id:
             return make_response(jsonify({'message': 'Forbidden: You are not authorized to update this rating'}), 403)
 
-        rating.status = status
-        db.session.commit()
+        try:
+            post = Post.query.get(post_id)
+            # Adjust the post's like/dislike count
+            if rating.status == 'like':
+                post.likes_count -= 1
+            elif rating.status == 'dislike':
+                post.dislikes_count -= 1
 
-        return make_response(jsonify({'message': 'Rating updated', 'rating': rating.to_dict()}), 200)
+            if status == 'like':
+                post.likes_count += 1
+            elif status == 'dislike':
+                post.dislikes_count += 1
+
+            rating.status = status
+            db.session.commit()
+
+            return make_response(jsonify({'message': 'Rating updated', 'rating': rating.to_dict()}), 200)
+        except Exception as e:
+            db.session.rollback()
+            return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
     
     @jwt_required()
     def delete(self, post_id, id):
@@ -395,6 +413,12 @@ class RatingByPost(Resource):
             return make_response(jsonify({'message': 'Forbidden: You are not authorized to delete this rating'}), 403)
         
         try:
+            post = Post.query.get(post_id)
+            if rating.status == 'like':
+                post.likes_count -= 1
+            elif rating.status == 'dislike':
+                post.dislikes_count -= 1
+
             db.session.delete(rating)
             db.session.commit()
             return make_response(jsonify({'message': 'Rating deleted'}), 200)
@@ -1147,7 +1171,7 @@ class TagListResource(Resource):
     
 
 
-api.add_resource(TagResource, '/tags', '/tags/<int:id>')
+api.add_resource(TagResource, '/tags/<int:id>')
 api.add_resource(TagListResource, '/tags')
 
 # Attachment Resources

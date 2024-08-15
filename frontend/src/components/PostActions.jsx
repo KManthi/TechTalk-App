@@ -8,6 +8,7 @@ const PostActions = ({ post, fetchPosts, onPostUpdate }) => {
     const [newComment, setNewComment] = useState('');
     const [comments, setComments] = useState([]);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isFormVisible, setIsFormVisible] = useState(false);
 
     const handleLike = async (postId, liked) => {
         try {
@@ -100,6 +101,10 @@ const PostActions = ({ post, fetchPosts, onPostUpdate }) => {
         setIsExpanded(!isExpanded);
     };
 
+    const toggleCommentForm = () => {
+        setIsFormVisible(!isFormVisible);
+    };
+
     return (
         <div className='post-actions'>
             <button 
@@ -121,35 +126,30 @@ const PostActions = ({ post, fetchPosts, onPostUpdate }) => {
                 ⭐ {post.favorites_count}
             </button>
             <button 
+                onClick={() => toggleCommentForm()} 
                 className='comment-bubble'
-                onClick={() => {
-                    fetchComments(post.id);
-                    togglePostExpansion();
-                }}
             >
                 💬 {post.comments_count || 0}
             </button>
-            {isExpanded && (
-                <>
-                    <div className='comment-form'>
-                        <textarea
-                            rows='3'
-                            placeholder='Add a comment...'
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                        />
-                        <button onClick={() => handleCommentSubmit(post.id)}>Comment</button>
-                    </div>
-                    {comments.length > 0 && (
-                        <div className='comments-list'>
-                            {comments.map((comment) => (
-                                <div key={comment.id} className='comment'>
-                                    <p>{comment.content}</p>
-                                </div>
-                            ))}
+            {isFormVisible && (
+                <div className='comment-form'>
+                    <textarea
+                        rows='3'
+                        placeholder='Add a comment...'
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                    />
+                    <button onClick={() => handleCommentSubmit(post.id)}>Comment</button>
+                </div>
+            )}
+            {isExpanded && comments.length > 0 && (
+                <div className='comments-list'>
+                    {comments.map((comment) => (
+                        <div key={comment.id} className='comment'>
+                            <p>{comment.content}</p>
                         </div>
-                    )}
-                </>
+                    ))}
+                </div>
             )}
         </div>
     );
