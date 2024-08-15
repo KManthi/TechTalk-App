@@ -989,8 +989,8 @@ class CommentsListResource(Resource):
             return jsonify({
                 'comments': comments_list,
                 'total': len(comments),
-                'pages': 1,  # No pagination, so always 1 page
-                'current_page': 1  # No pagination, so current page is always 1
+                'pages': 1,  
+                'current_page': 1  
             })
         except Exception as e:
             print(f"Error fetching comments: {e}")
