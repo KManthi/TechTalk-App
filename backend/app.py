@@ -68,24 +68,26 @@ def login():
 def logout():
     jti = get_jwt()['jti']
     blacklist.add(jti)
-    return {'message': 'Logged out successfully'}, 200
+    return jsonify({'message': 'Logged out successfully'}), 200
 
 # User Resources
 class UserResource(Resource):
     def post(self):
         data = request.get_json()
         if not data or not all(key in data for key in ('username', 'email', 'password')):
-            return {'message': 'Missing data'}, 400
+            return {'message': 'Missing required fields'}, 400
+
+        if User.query.filter_by(username=data['username']).first():
+            return {'message': 'Username already exists'}, 400
+        
+        if User.query.filter_by(email=data['email']).first():
+            return {'message': 'Email already exists'}, 400
 
         hashed_password = generate_password_hash(data['password'])
         user = User(
             username=data['username'],
             email=data['email'],
-            password_hash=hashed_password,
-            profile_pic=data.get('profile_pic'),
-            followers_count=data.get('followers_count', 0),
-            following_count=data.get('following_count', 0),
-            is_admin=data.get('is_admin', False)
+            password_hash=hashed_password
         )
         db.session.add(user)
         db.session.commit()
@@ -174,8 +176,8 @@ class UserProfiles(Resource):
         try:
             new_user_profile = UserProfile(
                 user_id=data['user_id'],
-                bio=data.get('bio'),
-                social_links=data.get('social_links')
+                bio=data.get('bio', ''),
+                social_links=data.get('social_links', '')
             )
             db.session.add(new_user_profile)
             db.session.commit()
