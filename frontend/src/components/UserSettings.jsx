@@ -41,62 +41,101 @@ const UserSettings = () => {
         }
     };
 
-    const handleApiCall = async (url, method, data) => {
+    const handleUpdateUsername = async () => {
         try {
             const token = localStorage.getItem('access_token');
             if (!token) throw new Error('No auth token found');
 
-            await axios({
-                url: `${baseUrl}${url}`,
-                method: method,
+            await axios.put(`${baseUrl}/userprofiles/1`, { username }, {
                 headers: {
                     'Authorization': `Bearer ${token}`
-                },
-                data: data
+                }
             });
 
-            return true;
+            alert('Username updated successfully');
         } catch (error) {
-            setError(`Failed to ${method === 'put' ? 'update' : method} data`);
-            console.error(`Error ${method === 'put' ? 'updating' : method} data:`, error);
-            return false;
+            setError('Failed to update username');
+            console.error('Error updating username:', error);
         }
     };
 
-    const handleUpdateUsername = async () => {
-        const success = await handleApiCall(`/userprofiles/1`, 'put', { username });
-        if (success) alert('Username updated successfully');
-    };
-
     const handleChangePassword = async () => {
-        const success = await handleApiCall(`/user/password`, 'put', { password, newPassword });
-        if (success) alert('Password changed successfully');
+        try {
+            const token = localStorage.getItem('access_token');
+            if (!token) throw new Error('No auth token found');
+
+            await axios.put(`${baseUrl}/user/password`, { password, newPassword }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            alert('Password changed successfully');
+        } catch (error) {
+            setError('Failed to change password');
+            console.error('Error changing password:', error);
+        }
     };
 
     const handleUpdateProfile = async () => {
-        const success = await handleApiCall(`/userprofiles/1`, 'put', { bio, social_links: socialLinks });
-        if (success) alert('Profile updated successfully');
+        try {
+            const token = localStorage.getItem('access_token');
+            if (!token) throw new Error('No auth token found');
+
+            await axios.put(`${baseUrl}/userprofiles/1`, { bio, social_links: socialLinks }, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            alert('Profile updated successfully');
+        } catch (error) {
+            setError('Failed to update profile');
+            console.error('Error updating profile:', error);
+        }
     };
 
     const handleDeleteAccount = async () => {
         if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-            const success = await handleApiCall(`/userprofiles/1`, 'delete');
-            if (success) {
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) throw new Error('No auth token found');
+
+                await axios.delete(`${baseUrl}/userprofiles/1`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
                 alert('Account deleted successfully');
                 localStorage.removeItem('access_token');
                 navigate('/');
+            } catch (error) {
+                setError('Failed to delete account');
+                console.error('Error deleting account:', error);
             }
         }
     };
 
     const handleLogout = async () => {
-        const success = await handleApiCall(`/logout`, 'delete');
-        if (success) {
+        try {
+            const token = localStorage.getItem('access_token');
+            console.log('Token:', token); 
+            if (!token) throw new Error('No auth token found');
+
+            await axios.delete(`${baseUrl}/logout`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
             localStorage.removeItem('access_token');
             navigate('/');
+        } catch (error) {
+            setError('Failed to logout');
+            console.error('Error logging out:', error);
         }
     };
-
 
     return (
         <div className="user-settings">
@@ -113,7 +152,7 @@ const UserSettings = () => {
                         className="file-input"
                         onChange={handleProfilePicChange} 
                     />
-                    <button className="update-button" onClick={handleSubmitProfilePic}>Update </button>
+                    <button className="update-button" onClick={handleSubmitProfilePic}>Update</button>
                 </div>
 
                 <div className="user-settings-section">
@@ -125,7 +164,7 @@ const UserSettings = () => {
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                     />
-                    <button className="update-button" onClick={handleUpdateUsername}>Update </button>
+                    <button className="update-button" onClick={handleUpdateUsername}>Update</button>
                 </div>
 
                 <div className="user-settings-section">
@@ -144,7 +183,7 @@ const UserSettings = () => {
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                     />
-                    <button className="update-button" onClick={handleChangePassword}>Change </button>
+                    <button className="update-button" onClick={handleChangePassword}>Change</button>
                 </div>
 
                 <div className="user-settings-section">

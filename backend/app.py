@@ -16,7 +16,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+CORS(app)
 
 db.init_app(app)
 migrate = Migrate(app, db)
@@ -665,7 +665,7 @@ class Posts(Resource):
         data = request.get_json()
         title = data.get('title')
         content = data.get('content')
-        category_id = data.get('category_id')
+        tags = data.get('tags', [])  # Tags are optional
 
         if not title or not content:
             return make_response(jsonify({'message': 'Bad Request: Missing title or content'}), 400)
@@ -673,13 +673,21 @@ class Posts(Resource):
         new_post = Post(
             title=title,
             content=content,
-            author_id=author_id,
-            category_id=category_id
+            author_id=author_id
         )
         try:
-           db.session.add(new_post)
-           db.session.commit()
-           return make_response(jsonify({'message': 'Post created successfully'}), 201)
+            db.session.add(new_post)
+            db.session.commit()
+            
+            # Handle tags
+            if tags:
+                for tag_id in tags:
+                    tag = Tag.query.get(tag_id)
+                    if tag:
+                        new_post.tags.append(tag)  # Assuming a many-to-many relationship between Post and Tag
+                db.session.commit()
+                
+            return make_response(jsonify({'message': 'Post created successfully'}), 201)
         except Exception as e:
             db.session.rollback()
             return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
@@ -1019,9 +1027,7 @@ class CommentsListResource(Resource):
             comments_list = [{'id': c.id, 'content': c.content} for c in comments]
             return jsonify({
                 'comments': comments_list,
-                'total': len(comments),
-                'pages': 1,  
-                'current_page': 1  
+                'total': len(comments)
             })
         except Exception as e:
             print(f"Error fetching comments: {e}")
