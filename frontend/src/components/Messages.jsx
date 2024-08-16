@@ -1,28 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Messages = () => {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'John Doe',
-      profilePic: 'https://via.placeholder.com/50',
-      body: 'Hey, I was wondering if you could help me with a React issue...',
-      timestamp: new Date(),
-      read: false,
-    },
-    {
-      id: 2,
-      sender: 'Jane Smith',
-      profilePic: 'https://via.placeholder.com/50',
-      body: 'Let\'s catch up sometime next week!',
-      timestamp: new Date(),
-      read: true,
-    },
-  ]);
-
+  const [messages, setMessages] = useState([]);
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const [replyContent, setReplyContent] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const token = localStorage.getItem('access_token');
+        const response = await axios.get('http://127.0.0.1:5555/users/me/messages', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        setMessages(response.data);
+      } catch (error) {
+        setError('Failed to fetch messages.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMessages();
+  }, []);
 
   const handleOpenMessage = (message) => {
     setSelectedMessage(message);
@@ -30,6 +36,49 @@ const Messages = () => {
       msg.id === message.id ? { ...msg, read: true } : msg
     );
     setMessages(updatedMessages);
+    updateMessageStatus(message.id, true);
+  };
+
+  const updateMessageStatus = async (messageId, readStatus) => {
+    try {
+      await axios.post(`https://techtalk-app.onrender.com/api/messages/${messageId}/status`, {
+        read: readStatus,
+      });
+    } catch (error) {
+      setError('Failed to update message status.');
+    }
+  };
+
+  const handleReply = async () => {
+    if (selectedMessage) {
+      if (replyContent.trim() === '') {
+        setError('Reply content cannot be empty.');
+        return;
+      }
+
+      try {
+        await axios.post(`https://techtalk-app.onrender.com/api/messages/${selectedMessage.id}/reply`, {
+          content: replyContent,
+        });
+        setReplyContent('');
+        setError('');
+      } catch (error) {
+        setError('Failed to send reply.');
+      }
+    }
+  };
+
+  const handleMarkAsUnread = async (message) => {
+    try {
+      await axios.post(`https://techtalk-app.onrender.com/api/messages/${message.id}/mark-unread`);
+      const updatedMessages = messages.map((msg) =>
+        msg.id === message.id ? { ...msg, read: false } : msg
+      );
+      setMessages(updatedMessages);
+      setSelectedMessage(null);
+    } catch (error) {
+      setError('Failed to mark message as unread.');
+    }
   };
 
   return (
@@ -38,25 +87,71 @@ const Messages = () => {
         Home
       </button>
 
-      <div className="messages-subcontainer">
+      <div className="container">
         <h1>Inbox</h1>
-        <div className="messages-content">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`message-item ${message.read ? 'read' : 'unread'}`}
-              onClick={() => handleOpenMessage(message)}
-            >
-              <img src={message.profilePic} alt={`${message.sender}'s Profile`} className="profile-pic" />
-              <div className="message-text-container">
-                <div className="message-username">{message.sender}</div>
-                <div className="message-text">{message.body}</div>
-                <div className="message-timestamp">{message.timestamp.toLocaleString()}</div>
-              </div>
-            </div>
-          ))}
+        <div className="news-container1">
+          <div className="news-headline1">MESSAGES</div>
         </div>
       </div>
+
+      {loading ? (
+        <div>
+          <p>No messages found.</p>
+          <p>Loading messages...</p>
+        </div>
+      ) : error ? (
+        <p className="error">{error}</p>
+      ) : !selectedMessage ? (
+        <div className="inbox">
+          <div className="jumbotron">
+            <div className="container">
+              <h2>Inbox</h2>
+              {messages.length > 0 ? (
+                messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`message-preview ${message.read ? '' : 'unread'}`}
+                    onClick={() => handleOpenMessage(message)}
+                  >
+                    <p>
+                      <strong>{message.sender}</strong>
+                      <span>{message.subject || 'No Subject'}</span>
+                      <span>{new Date(message.timestamp).toLocaleString()}</span>
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <p>No messages found.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="jumbotron">
+          <div className="container">
+            <div className="message-view">
+              <h2>Message from {selectedMessage.sender}</h2>
+              <p>
+                <strong>Received:</strong> {new Date(selectedMessage.timestamp).toLocaleString()}
+              </p>
+              <div>{selectedMessage.body}</div>
+
+              <div className="reply-section">
+                <textarea
+                  placeholder="Type your reply here..."
+                  rows="4"
+                  value={replyContent}
+                  onChange={(e) => setReplyContent(e.target.value)}
+                />
+                <button onClick={handleReply}>Send Reply</button>
+                {error && <div className="error">{error}</div>}
+              </div>
+
+              <button onClick={() => handleMarkAsUnread(selectedMessage)}>Mark as Unread</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
