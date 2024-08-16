@@ -41,6 +41,13 @@ def refresh():
     access_token = create_access_token(identity=identity)
     return jsonify(access_token=access_token), 200
 
+@app.route('/protected', methods=['GET'])
+@jwt_required()
+def protected():
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
+
+
 # Login and Logout Routes
 @app.route('/')
 def index():

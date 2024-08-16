@@ -45,7 +45,7 @@ const HomeComponent = () => {
             });
             setPosts(posts.map(post =>
                 post.id === postId
-                    ? { ...post, comments: response.data }
+                    ? { ...post, comments: Array.isArray(response.data) ? response.data : [] }
                     : post
             ));
         } catch (error) {
@@ -72,7 +72,10 @@ const HomeComponent = () => {
             post.id === postId
                 ? {
                     ...post,
-                    comments: [...(post.comments || []), { content: newComment, user: 'You', created_at: new Date().toISOString() }],
+                    comments: [
+                        ...(Array.isArray(post.comments) ? post.comments : []), 
+                        { content: newComment, user: 'You', created_at: new Date().toISOString() }
+                    ],
                     comments_count: (post.comments_count || 0) + 1
                 }
                 : post
@@ -116,7 +119,7 @@ const HomeComponent = () => {
                                     <div className='expanded-content'>
                                         <div className='comment-section'>
                                             <h3>Comments ({post.comments_count || 0})</h3>
-                                            {(post.comments || []).map((comment, index) => (
+                                            {(Array.isArray(post.comments) ? post.comments : []).map((comment, index) => (
                                                 <div key={index} className='comment'>
                                                     <p><strong>{comment.user}:</strong> {comment.content}</p>
                                                     <small>{new Date(comment.created_at).toLocaleString()}</small>

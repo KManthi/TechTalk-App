@@ -459,7 +459,7 @@ body {
 }
 
 .comment-form button {
-  background-color: #007bff;
+  background-color: #C8A1E0;
   color: white;
   border: none;
   padding: 5px 10px;
@@ -470,7 +470,7 @@ body {
 }
 
 .comment-form button:hover {
-  background-color: #0056b3;
+  background-color: #E2BFD9;
 }
 
 .comments-list {

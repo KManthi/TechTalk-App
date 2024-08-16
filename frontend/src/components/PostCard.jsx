@@ -110,12 +110,12 @@ const PostCard = ({ post, fetchPosts, onPostUpdate }) => {
     return (
         <div className='post-actions'>
             <div className='tags-icon-container'>
-            <FontAwesomeIcon icon={faTags} className='tags-icon' />
-            <div className='tags-hover'>
-                {post.tags && post.tags.map((tag) => (
-                    <span key={tag.id} className='tag'>{tag.name}</span>
-                ))}
-            </div>
+                <FontAwesomeIcon icon={faTags} className='tags-icon' />
+                <div className='tags-hover'>
+                    {post.tags && post.tags.map((tag) => (
+                        <span key={tag.id} className='tag'>{tag.name}</span>
+                    ))}
+                </div>
             </div>
             <button 
                 onClick={() => handleLike(post.id, post.liked)} 
@@ -154,7 +154,7 @@ const PostCard = ({ post, fetchPosts, onPostUpdate }) => {
             )}
             {isExpanded && comments.length > 0 && (
                 <div className='comments-list'>
-                    {comments.map((comment) => (
+                    {Array.isArray(comments) && comments.map((comment) => (
                         <div key={comment.id} className='comment'>
                             <p>{comment.content}</p>
                         </div>
