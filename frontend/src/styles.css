@@ -667,6 +667,7 @@ body {
   transition: width 0.3s ease, height 0.3s ease;
   z-index: 1000;
   color: black;
+  overflow: hidden;
 }
 
 .messages-bar.expanded {
@@ -680,7 +681,6 @@ body {
   justify-content: space-between;
   align-items: center;
   font-weight: bold;
-  margin-left: 100px;
 }
 
 .messages-content {
@@ -696,6 +696,34 @@ body {
 
 .messages-bar.expanded .messages-content {
   display: block;
+}
+
+.message-bar-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  overflow: hidden; 
+}
+
+.message-bar-item .profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.message-bar-item .message-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.message-bar-item .message-content .message-text {
+  font-size: 14px;
+  color: #000;
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
 }
 
 .explore-container {
@@ -874,3 +902,4 @@ body {
 .back-home:hover {
   background-color: #E2BFD9;
 }
+
