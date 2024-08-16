@@ -7,7 +7,7 @@ const Messages = () => {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [replyContent, setReplyContent] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true); // Added loading state
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,15 +15,15 @@ const Messages = () => {
       try {
         const token = localStorage.getItem('access_token');
         const response = await axios.get('http://127.0.0.1:5555/users/me/messages', {
-           headers : {
+          headers: {
             'Authorization': `Bearer ${token}`
-           }
-          });
+          }
+        });
         setMessages(response.data);
       } catch (error) {
         setError('Failed to fetch messages.');
       } finally {
-        setLoading(false); 
+        setLoading(false);
       }
     };
 
@@ -81,33 +81,24 @@ const Messages = () => {
     }
   };
 
-
-
   return (
-        <div className="messages-container">
-          <button className="back-home btn btn-lg text-uppercase animate_btn" onClick={() => navigate('/home')}>
-            Home
-          </button>
-          
-          <div className="container">
-          <h1>Inbox</h1>
-            <div className="news-container1">
-              <div className="news-headline1">
-                MESSAGES
-              </div> 
-              
-              </div>
-             </div>
-        
+    <div className="messages-container">
+      <button className="back-home btn btn-lg text-uppercase animate_btn" onClick={() => navigate('/home')}>
+        Home
+      </button>
 
-      {loading ? ( // Display "No messages found" and loading state before messages are fetched
-       
+      <div className="container">
+        <h1>Inbox</h1>
+        <div className="news-container1">
+          <div className="news-headline1">MESSAGES</div>
+        </div>
+      </div>
+
+      {loading ? (
         <div>
-        <p>No messages found.</p>
+          <p>No messages found.</p>
           <p>Loading messages...</p>
         </div>
-        
-        
       ) : error ? (
         <p className="error">{error}</p>
       ) : !selectedMessage ? (
@@ -135,8 +126,6 @@ const Messages = () => {
             </div>
           </div>
         </div>
-        
-  
       ) : (
         <div className="jumbotron">
           <div className="container">
