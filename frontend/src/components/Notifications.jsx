@@ -3,7 +3,9 @@ import axios from 'axios';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { FaUserCircle } from 'react-icons/fa'; // Using a profile icon
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
+import NavigationBar from './NavigationBar';
 
 const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
@@ -56,14 +58,7 @@ const NotificationsPage = () => {
 
   return (
     <div className="whatsapp-page">
-      <header className="whatsapp-header">
-        <button
-          className="whatsapp-back-button"
-          onClick={() => navigate('/home')}
-        >
-          Home
-        </button>
-      </header>
+      <NavigationBar />
 
       <div className="whatsapp-notifications">
         <div className="whatsapp-title">
@@ -96,7 +91,7 @@ const NotificationsPage = () => {
                 onClick={() => markAsRead(notification.id)}
               >
                 <div className="whatsapp-profile-container">
-                  <FaUserCircle className="whatsapp-profile-icon" />
+                  <faUserCircle className="whatsapp-profile-icon" />
                 </div>
                 <div className="whatsapp-message-container">
                   <strong>{notification.user}</strong>

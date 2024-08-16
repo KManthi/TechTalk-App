@@ -70,5 +70,4 @@ const MessagesBar = ({ onSelectMessage }) => {
         </div>
     );
 };
-
 export default MessagesBar;

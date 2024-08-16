@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCog, faUser, faCompass, faBell, faEnvelope, faHome, faArrowCircleRight, faArrowCircleLeft } from '@fortawesome/free-solid-svg-icons';
+import { faCog, faPen, faUser, faCompass, faBell, faEnvelope, faHome, faArrowCircleRight, faArrowCircleLeft } from '@fortawesome/free-solid-svg-icons';
 import "../styles.css";
 
 const NavigationBar = () => {
@@ -29,6 +29,11 @@ const NavigationBar = () => {
                         <li>
                             <Link to="/explore">
                                 <FontAwesomeIcon icon={faCompass} /> Explore
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="/create-post">
+                                <FontAwesomeIcon icon={faPen} /> Post
                             </Link>
                         </li>
                         <li>

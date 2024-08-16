@@ -27,9 +27,6 @@ export default class WelcomePage extends Component {
       <div className="landing-page">
         <nav className="top-landing">
           <div className="landing-container">
-            <Link className="navbar-link" to="/about">
-              About
-            </Link>
               <Link className="navbar-link" to="/login">
                 Login
               </Link>
