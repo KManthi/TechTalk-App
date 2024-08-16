@@ -3,6 +3,7 @@ import axios from 'axios';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { FaUserCircle } from 'react-icons/fa'; // Using a profile icon
 
 const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
@@ -11,19 +12,18 @@ const NotificationsPage = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-
   const fetchNotifications = async (page = 1) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('access_token');
       const response = await axios.get(`http://127.0.0.1:5555/notifications?page=${page}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
       const newNotifications = response.data;
 
-      setNotifications(prev => [...prev, ...newNotifications]);
+      setNotifications((prev) => [...prev, ...newNotifications]);
       setHasMore(newNotifications.length > 0);
     } catch (err) {
       setError('Failed to load notifications.');
@@ -32,12 +32,11 @@ const NotificationsPage = () => {
     }
   };
 
-  
   const markAsRead = async (id) => {
     try {
       await axios.patch(`http://127.0.0.1:5555/notifications/${id}`, { read: true });
-      setNotifications(prev =>
-        prev.map(notification =>
+      setNotifications((prev) =>
+        prev.map((notification) =>
           notification.id === id ? { ...notification, read: true } : notification
         )
       );
@@ -45,7 +44,6 @@ const NotificationsPage = () => {
       setError('Failed to mark notification as read.');
     }
   };
-
 
   const handleLoadMore = () => {
     const nextPage = Math.ceil(notifications.length / 10) + 1;
@@ -57,50 +55,71 @@ const NotificationsPage = () => {
   }, []);
 
   return (
-    <div className="notifications-page">
-      <header>
-        <button className="back-home btn btn-lg text-uppercase animate_btn" onClick={() => navigate('/home')}>Home</button>
+    <div className="whatsapp-page">
+      <header className="whatsapp-header">
+        <button
+          className="whatsapp-back-button"
+          onClick={() => navigate('/home')}
+        >
+          Home
+        </button>
       </header>
-      <div className="jumbotron">
-            <div className="container">
-            <div class="news-container">
-                <div class="news-headline">
-                  NOTIFICATION
-                </div> 
-            </div>
-              {error && <p className="error">{error}</p>}
-              {notifications.length === 0 && !loading && <p>No notifications yet.</p>}
-              <InfiniteScroll
-                dataLength={notifications.length}
-                next={handleLoadMore}
-                hasMore={hasMore}
-                loader={<div class="loading-container">
-                  <span class="loading-text">Loading</span>
-                  <span class="dot">.</span>
-                  <span class="dot">.</span>
-                  <span class="dot">.</span>
-              </div>}
-              >
-                <ul>
-                  {notifications.map(notification => (
-                    <li
-                      key={notification.id}
-                      style={{ backgroundColor: notification.read ? 'white' : '#f0f0f0' }}
-                      onClick={() => markAsRead(notification.id)}
-                    >
-                      <div>
-                        <strong>{notification.user}</strong>
-                        {notification.type === 'comment' && <p>{notification.content}</p>}
-                        <p>{formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true })}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </InfiniteScroll>
-            </div>
-            </div>
-            </div>
-          );
-        };
 
-    export default NotificationsPage;
+      <div className="whatsapp-notifications">
+        <div className="whatsapp-title">
+          <h2>Notifications</h2>
+        </div>
+
+        {error && <p className="whatsapp-error">{error}</p>}
+
+        {notifications.length === 0 && !loading && (
+          <p className="whatsapp-no-notifications">No notifications yet.</p>
+        )}
+
+        <InfiniteScroll
+          dataLength={notifications.length}
+          next={handleLoadMore}
+          hasMore={hasMore}
+          loader={
+            <div className="whatsapp-loading">
+              <div className="whatsapp-loader"></div>
+            </div>
+          }
+        >
+          <ul className="whatsapp-notifications-list">
+            {notifications.map((notification) => (
+              <li
+                key={notification.id}
+                className={`whatsapp-notification-item ${
+                  notification.read ? 'whatsapp-read' : 'whatsapp-unread'
+                }`}
+                onClick={() => markAsRead(notification.id)}
+              >
+                <div className="whatsapp-profile-container">
+                  <FaUserCircle className="whatsapp-profile-icon" />
+                </div>
+                <div className="whatsapp-message-container">
+                  <strong>{notification.user}</strong>
+                  <p className="whatsapp-message">
+                    {notification.type === 'like'
+                      ? `liked your post`
+                      : notification.type === 'comment'
+                      ? `left a comment: ${notification.content}`
+                      : `Notification type not recognized`}
+                  </p>
+                  <p className="whatsapp-timestamp">
+                    {formatDistanceToNow(new Date(notification.timestamp), {
+                      addSuffix: true,
+                    })}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </InfiniteScroll>
+      </div>
+    </div>
+  );
+};
+
+export default NotificationsPage;
