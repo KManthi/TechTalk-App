@@ -1145,3 +1145,208 @@ body {
     transform: rotate(360deg);
   }
 }
+/* settings */
+/* Settings.css */
+/* Settings.css */
+
+/* Background for the full container */
+.settings-container {
+  background-color:#F7EFE5 ;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 140vh;
+  width: 100vw;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Main settings container */
+.settings-content {
+  padding: 20px;
+  max-width: 1000px; /* Increase width for larger screens */
+  margin: auto;
+  font-family: Arial, sans-serif;
+  background-color: #000;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Main heading */
+.settings-content h1 {
+  text-align: center;
+  margin-bottom: 24px;
+  color: #fff;
+  font-size: 2.5rem;
+}
+.settings-content h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #0b0a0a;
+  font-size: 1.95rem;
+}
+
+/* Section headers */
+.settings-content h2 {
+  text-align: center;
+  margin-bottom: 22px;
+  color: #0b0a0a;
+  font-size: 1.95rem;
+}
+.settings-content h3 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #0b0a0a;
+  font-size: 1.95rem;
+}
+
+
+/* Section Styles */
+.notification-settings-section,
+.appearance-settings-section,
+.content-preferences-section {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #E2BFD9;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+/* Hover effect for sections */
+.notification-settings-section:hover,
+.appearance-settings-section:hover,
+.content-preferences-section:hover {
+  box-shadow: 9px 6px 12px rgba(0, 0, 0, 0.2);
+  background-color: #9589bd;
+}
+
+/* Labels in sections */
+.notification-settings-section label,
+.appearance-settings-section label,
+.content-preferences-section label {
+  display: block;
+  margin-bottom: 10px;
+  color: #000;
+  font-size: 1.2rem;
+  transition: color 0.3s ease;
+}
+
+/* Checkbox and radio input styles */
+.notification-settings-section input[type="checkbox"],
+.appearance-settings-section input[type="radio"],
+.content-preferences-section input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+/* Time input styling */
+input[type="time"] {
+  margin-left: 10px;
+  padding: 5px;
+  background-color:#8f6565;
+  border: 1px solid #190a0a;
+  border-radius: 4px;
+}
+
+/* Appearance settings */
+.appearance-settings-section label {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.appearance-settings-section input[type="radio"] {
+  margin-right: 5px;
+}
+
+/* Content categories */
+.content-categories-section {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.content-categories-section label {
+  width: 50%;
+  margin-bottom: 10px;
+}
+
+.content-categories-section input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.settings-content {
+  animation: fadeIn 0.9s ease-in-out;
+}
+
+/* Button styles */
+.save-settings-button {
+  background-color: #9230e7; /* Main button color */
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.save-settings-button:hover {
+  background-color: #5b8bbf; /* Darker shade for hover */
+}
+
+/* Back button styling */
+.back-home-button {
+  background-color: #9230e7; /* Main button color */
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.back-home-button:hover {
+  background-color: #5b8bbf; /* Darker shade for hover */
+}
+
+/* Navigation bar styling */
+.navigation-bar {
+  display: flex;
+  justify-content: space-around;
+  background-color: #f8f9fa;
+  padding: 10px;
+}
+
+.navigation-bar ul {
+  list-style: none;
+  display: flex;
+  padding: 0;
+  margin: 0;
+}
+
+.navigation-bar li {
+  margin: 0 10px;
+}
+
+.navigation-bar a {
+  text-decoration: none;
+  color: #333;
+  display: flex;
+  align-items: center;
+}
+
+.navigation-bar a span {
+  margin-left: 5px;
+}

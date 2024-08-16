@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles.css';
 import axios from 'axios';
 
 const Settings = () => {
@@ -63,17 +62,17 @@ const Settings = () => {
   };
 
   return (
-    <div className="full-container">
-      <div className="home-button">
-        <button className="back-home btn btn-lg text-uppercase animate_btn" onClick={() => navigate('/home')}>
+    <div className="settings-container">
+      <div className="back-button">
+        <button className="back-home-button" onClick={() => navigate('/home')}>
           Home
         </button>
       </div>
-      <div className="settings">
+      <div className="settings-content">
         <h1>Settings</h1>
 
         {/* Notification Settings */}
-        <div className="notification-settings">
+        <div className="notification-settings-section">
           <h2>Notification Settings</h2>
           <label>
             <input
@@ -83,7 +82,7 @@ const Settings = () => {
             />
             Enable Push Notifications
           </label>
-          <div className="notification-customization">
+          <div className="notification-preferences">
             <h3>Notification Preferences</h3>
             <label>
               <input
@@ -118,7 +117,7 @@ const Settings = () => {
               Messages
             </label>
           </div>
-          <div className="quiet-hours">
+          <div className="quiet-hours-section">
             <h3>Quiet Hours</h3>
             <label>
               Start Time:
@@ -148,7 +147,7 @@ const Settings = () => {
         </div>
 
         {/* Appearance Settings */}
-        <div className="appearance-settings">
+        <div className="appearance-settings-section">
           <h2>Appearance Settings</h2>
           <label>
             <input
@@ -183,7 +182,7 @@ const Settings = () => {
         </div>
 
         {/* Content Preferences */}
-        <div className="content-preferences">
+        <div className="content-preferences-section">
           <h2>Content Preferences</h2>
           <label>
             <input
@@ -193,7 +192,7 @@ const Settings = () => {
             />
             Filter Sensitive Content
           </label>
-          <div className="content-categories">
+          <div className="content-categories-section">
             <h3>Content Categories</h3>
             {Object.keys(categories).map((category) => (
               <label key={category}>
@@ -209,8 +208,8 @@ const Settings = () => {
         </div>
 
         {/* Save Button */}
-        <div className="save-settings">
-          <button className="btn btn-lg btn_style text-uppercase animate_btn" onClick={handleSaveSettings}>
+        <div className="save-settings-section">
+          <button className="save-settings-button" onClick={handleSaveSettings}>
             Save Settings
           </button>
         </div>
