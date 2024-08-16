@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+
 const Messages = () => {
   const [messages, setMessages] = useState([]);
   const [selectedMessage, setSelectedMessage] = useState(null);
@@ -82,73 +83,70 @@ const Messages = () => {
   };
 
   return (
-    <div className="messages-container">
-      <button className="back-home btn btn-lg text-uppercase animate_btn" onClick={() => navigate('/home')}>
-        Home
-      </button>
-
-      <div className="container">
-        <h1>Inbox</h1>
-        <div className="news-container1">
-          <div className="news-headline1">MESSAGES</div>
-        </div>
-      </div>
+    <div className="messages-page">
+      <header className="messages-header">
+        <button className="messages-back-button" onClick={() => navigate('/home')}>
+          Back
+        </button>
+        <h1 className="messages-title">Inbox</h1>
+      </header>
 
       {loading ? (
-        <div>
-          <p>No messages found.</p>
+        <div className="messages-loading">
+          <div className="messages-loader"></div>
           <p>Loading messages...</p>
         </div>
       ) : error ? (
-        <p className="error">{error}</p>
+        <p className="messages-error">{error}</p>
       ) : !selectedMessage ? (
-        <div className="inbox">
-          <div className="jumbotron">
-            <div className="container">
-              <h2>Inbox</h2>
-              {messages.length > 0 ? (
-                messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`message-preview ${message.read ? '' : 'unread'}`}
-                    onClick={() => handleOpenMessage(message)}
-                  >
-                    <p>
-                      <strong>{message.sender}</strong>
-                      <span>{message.subject || 'No Subject'}</span>
-                      <span>{new Date(message.timestamp).toLocaleString()}</span>
+        <div className="messages-container">
+          {messages.length > 0 ? (
+            <ul className="message-list">
+              {messages.map((message) => (
+                <li
+                  key={message.id}
+                  className={`message-item ${message.read ? '' : 'unread'}`}
+                  onClick={() => handleOpenMessage(message)}
+                >
+                  <div className="message-avatar">
+                    {message.sender.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="message-details">
+                    <p className="message-sender">{message.sender}</p>
+                    <p className="message-subject">{message.subject || 'No Subject'}</p>
+                    <p className="message-timestamp">
+                      {new Date(message.timestamp).toLocaleString()}
                     </p>
                   </div>
-                ))
-              ) : (
-                <p>No messages found.</p>
-              )}
-            </div>
-          </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="messages-no-messages">No messages found.</p>
+          )}
         </div>
       ) : (
-        <div className="jumbotron">
-          <div className="container">
-            <div className="message-view">
-              <h2>Message from {selectedMessage.sender}</h2>
-              <p>
-                <strong>Received:</strong> {new Date(selectedMessage.timestamp).toLocaleString()}
-              </p>
-              <div>{selectedMessage.body}</div>
+        <div className="messages-container">
+          <div className="message-details">
+            <h2>Message from {selectedMessage.sender}</h2>
+            <p className="message-timestamp">
+              Received: {new Date(selectedMessage.timestamp).toLocaleString()}
+            </p>
+            <div className="message-body">{selectedMessage.body}</div>
 
-              <div className="reply-section">
-                <textarea
-                  placeholder="Type your reply here..."
-                  rows="4"
-                  value={replyContent}
-                  onChange={(e) => setReplyContent(e.target.value)}
-                />
-                <button onClick={handleReply}>Send Reply</button>
-                {error && <div className="error">{error}</div>}
-              </div>
-
-              <button onClick={() => handleMarkAsUnread(selectedMessage)}>Mark as Unread</button>
+            <div className="reply-section">
+              <textarea
+                className="reply-textarea"
+                placeholder="Type your reply here..."
+                rows="4"
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+              />
+              <button className="reply-button" onClick={handleReply}>Send Reply</button>
+              {error && <div className="messages-error">{error}</div>}
             </div>
+
+            <button className="messages-back-button" onClick={() => handleMarkAsUnread(selectedMessage)}>Mark as Unread</button>
           </div>
         </div>
       )}
