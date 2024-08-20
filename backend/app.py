@@ -55,13 +55,13 @@ def index():
 
 @app.route('/login', methods=['POST'])
 def login():
+    email = request.json.get('email')
     username = request.json.get('username')
-    password = request.json.get('password')
-    if not username or not password:
+    if not email or not username:
         return {'message': 'Missing username or password'}, 400
     
-    user = User.query.filter_by(username=username).first()
-    if user and user.check_password(password):
+    user = User.query.filter_by(email=email).first()
+    if user:
         access_token = create_access_token(identity=user.id, expires_delta=expires)
         refresh_token = create_refresh_token(identity=user.id)
         return {
@@ -83,7 +83,8 @@ def logout():
 class UserResource(Resource):
     def post(self):
         data = request.get_json()
-        if not data or not all(key in data for key in ('username', 'email', 'password')):
+        required_fields = ['username', 'email', 'password']
+        if not data or not all(key in data for key in required_fields):
             return {'message': 'Missing required fields'}, 400
 
         if User.query.filter_by(username=data['username']).first():
@@ -92,6 +93,9 @@ class UserResource(Resource):
         if User.query.filter_by(email=data['email']).first():
             return {'message': 'Email already exists'}, 400
 
+        if len(data['password']) < 8:
+            return {'message': 'Password must be at least 8 characters long'}, 400
+        
         hashed_password = generate_password_hash(data['password'])
         user = User(
             username=data['username'],
@@ -116,22 +120,36 @@ class SpecificUser(Resource):
     
     @jwt_required()
     def put(self, id):
+        current_user_id = get_jwt_identity()
+        current_user = User.query.get(current_user_id)
         user = User.query.get_or_404(id)
         data = request.get_json()
 
         if 'username' in data:
+            if User.query.filter_by(username=data['username']).first():
+                return {'message': 'Username already taken'}, 400
             user.username = data['username']
+        
         if 'email' in data:
+            if User.query.filter_by(email=data['email']).first():
+                return {'message': 'Email already taken'}, 400
             user.email = data['email']
+        
         if 'profile_pic' in data:
             user.profile_pic = data['profile_pic']
+        
         if 'password' in data:
+            if 'current_password' not in data or not user.check_password(data['current_password']):
+                return {'message': 'Incorrect current password'}, 401
             user.password_hash = generate_password_hash(data['password'])
+        
         if 'followers_count' in data:
             user.followers_count = data['followers_count']
+        
         if 'following_count' in data:
             user.following_count = data['following_count']
-        if 'is_admin' in data:
+        
+        if 'is_admin' in data and current_user.is_admin:
             user.is_admin = data['is_admin']
 
         db.session.commit()
@@ -139,7 +157,12 @@ class SpecificUser(Resource):
     
     @jwt_required()
     def delete(self, id):
+        current_user_id = get_jwt_identity()
+        current_user = User.query.get(current_user_id)
         user = User.query.get_or_404(id)
+        if current_user.id != user.id and not current_user.is_admin:
+            return {'message': 'Unauthorized'}, 403
+
         db.session.delete(user)
         db.session.commit()
         return {'message': 'User deleted'}, 204
@@ -157,7 +180,7 @@ class CheckPasswordResource(Resource):
         else:
             return {'message': 'Incorrect password'}, 401
         
-class RecommendedUSers(Resource):
+class RecommendedUsers(Resource):
     def get(self):
         users = User.query.filter_by(is_admin=False).order_by(User.followers_count.desc()).limit(10).all()
         result = [user.to_dict() for user in users]
@@ -166,7 +189,7 @@ class RecommendedUSers(Resource):
 api.add_resource(UserResource, '/users')
 api.add_resource(SpecificUser, '/users/<int:id>')
 api.add_resource(CheckPasswordResource, '/users/<int:id>/check_password')
-api.add_resource(RecommendedUSers, '/recommended-users')
+api.add_resource(RecommendedUsers, '/recommended-users')
 
 # UserProfile Resources
 class UserProfiles(Resource):
@@ -174,14 +197,22 @@ class UserProfiles(Resource):
     def get(self):
         user_profiles = UserProfile.query.all()
         result = [up.to_dict() for up in user_profiles]
-        return make_response(jsonify(result), 200)
+        return make_response(jsonify({'data': result}), 200)
     
     @jwt_required()
     def post(self):
         data = request.get_json()
         if not data or 'user_id' not in data:
-            return make_response(jsonify({'message': 'Bad Request: Missing data'}), 400)
+            return make_response(jsonify({'message': 'Bad Request: Missing user_id'}), 400)
         
+        user = User.query.get(data['user_id'])
+        if not user:
+            return make_response(jsonify({'message': 'User not found'}), 404)
+        
+        existing_profile = UserProfile.query.filter_by(user_id=data['user_id']).first()
+        if existing_profile:
+            return make_response(jsonify({'message': 'User profile already exists'}), 400)
+
         try:
             new_user_profile = UserProfile(
                 user_id=data['user_id'],
@@ -190,7 +221,7 @@ class UserProfiles(Resource):
             )
             db.session.add(new_user_profile)
             db.session.commit()
-            return make_response(jsonify({'message': 'User profile created'}), 201)
+            return make_response(jsonify({'message': 'User profile created', 'data': new_user_profile.to_dict()}), 201)
         except Exception as e:
             db.session.rollback()
             return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
@@ -201,28 +232,28 @@ class UserProfileByID(Resource):
         user_profile = UserProfile.query.filter_by(id=id).first()
         if not user_profile:
             return make_response(jsonify({'message': 'User profile not found'}), 404)
-        response = {
-            'user_profile': user_profile.to_dict()
-        }
-        return make_response(jsonify(response), 200)
+        return make_response(jsonify({'data': user_profile.to_dict()}), 200)
     
     @jwt_required()
     def put(self, id):
-        data = request.get_json()
         user_profile = UserProfile.query.filter_by(id=id).first()
         if not user_profile:
             return make_response(jsonify({'message': 'User profile not found'}), 404)
+        
+        data = request.get_json()
+        if not data:
+            return make_response(jsonify({'message': 'Bad Request: Missing data'}), 400)
+        
+        if 'bio' not in data and 'social_links' not in data:
+            return make_response(jsonify({'message': 'Bad Request: At least one of bio or social_links must be provided'}), 400)
         
         if 'bio' in data:
             user_profile.bio = data['bio']
         if 'social_links' in data:
             user_profile.social_links = data['social_links']
-
-        if 'bio' not in data and 'social_links' not in data:
-            return make_response(jsonify({'message': 'Bad Request: At least one of bio or social_links must be provided'}), 400)
         
         db.session.commit()
-        return make_response(jsonify({'message': 'User profile updated'}), 200)
+        return make_response(jsonify({'message': 'User profile updated', 'data': user_profile.to_dict()}), 200)
     
     @jwt_required()
     def delete(self, id):
@@ -243,6 +274,7 @@ class MyProfile(Resource):
     def get(self):
         user_id = get_jwt_identity()
         user = User.query.get(user_id)
+        
         if not user:
             return make_response(jsonify({'message': 'User not found'}), 404)
 
@@ -254,9 +286,46 @@ class MyProfile(Resource):
             'user': user.to_dict(),
             'user_profile': user_profile.to_dict()
         }
-        return make_response(jsonify(response), 200)
+        return make_response(jsonify({'data': response}), 200)
+
+    @jwt_required()
+    def put(self):
+       user_id = get_jwt_identity()
+       user = User.query.get(user_id)
+       if not user:
+           return make_response(jsonify({'message': 'User not found'}), 404)
+
+       data = request.get_json()
+       if not data:
+           return make_response(jsonify({'message': 'Bad Request: Missing data'}), 400)
+
+    
+       if not any(key in data for key in ['bio', 'username', 'social_links', 'password', 'profile_picture']):
+           return make_response(jsonify({'message': 'Bad Request: At least one field must be provided'}), 400)
+
+    
+       user_profile = UserProfile.query.filter_by(user_id=user_id).first()
+       if not user_profile:
+           return make_response(jsonify({'message': 'User profile not found'}), 404)
+
+       if 'bio' in data:
+           user_profile.bio = data['bio']
+       if 'social_links' in data:
+           user_profile.social_links = data['social_links']
+       if 'profile_picture' in data:
+           user_profile.profile_picture = data['profile_picture']
+
+    
+       if 'username' in data:
+           user.username = data['username']
+       if 'password' in data:
+           user.password = generate_password_hash(data['password'])
+
+       db.session.commit()
+       return make_response(jsonify({'message': 'User profile updated'}), 200)
         
-api.add_resource(UserProfiles, '/userprofiles')
+        
+api.add_resource(UserProfiles, '/profiles')
 api.add_resource(UserProfileByID, '/userprofiles/<int:id>')
 api.add_resource(MyProfile, '/my-profile')
 
@@ -839,74 +908,90 @@ api.add_resource(Categories, '/categories')
 api.add_resource(CategoryByID, '/categories/<int:id>')
 
 # Followers Resources
-class FollowResources(Resource):
+class Myfollowers(Resource):
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()        
+        
+        follower_ids = db.session.query(followers.c.follower_id).filter(followers.c.followed_id == user_id).all()
+        follower_ids = [f[0] for f in follower_ids]          
+        
+        followers_list = User.query.filter(User.id.in_(follower_ids)).all()
+        
+        result = [user.to_dict() for user in followers_list]
+        
+        return make_response(jsonify(result), 200)
+    
+class MyFollowing(Resource):
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()
+        following_ids = db.session.query(followers.c.followed_id).filter(followers.c.follower_id == user_id).all()
+        following_ids = [f[0] for f in following_ids]  
+        
+        following_list = User.query.filter(User.id.in_(following_ids)).all()
+        
+        result = [user.to_dict() for user in following_list]
+        
+        return make_response(jsonify(result), 200)
+
+class Follow(Resource):
     @jwt_required()
     def post(self):
         user_id = get_jwt_identity()
         data = request.get_json()
-        followed_id = data.get('followed_id')
+        followed_user_id = data.get('followed_user_id')
 
-        if not followed_id:
-            return make_response(jsonify({'message': 'Bad Request: Missing followed_id'}), 400)
-        
-        if followed_id == user_id:
+        if not followed_user_id:
+            return make_response(jsonify({'message': 'Invalid request data'}), 400)
+
+        if user_id == followed_user_id:
             return make_response(jsonify({'message': 'Cannot follow yourself'}), 400)
-        
-        existing_follow = followers.query.filter_by(follower_id=user_id, followed_id=followed_id).first()
-        if existing_follow:
+
+        existing_follow = db.session.query(followers).filter_by(follower_id=user_id, followed_id=followed_user_id).first()
+        if not existing_follow:
+            db.session.execute(followers.insert().values(follower_id=user_id, followed_id=followed_user_id))
+            db.session.commit()
+
+            User.query.filter_by(id=user_id).update({'following_count': User.following_count + 1})
+            User.query.filter_by(id=followed_user_id).update({'followers_count': User.followers_count + 1})
+            db.session.commit()
+
+            return make_response(jsonify({'message': 'Followed successfully'}), 200)
+        else:
             return make_response(jsonify({'message': 'Already following'}), 400)
         
-        new_follow = followers(follower_id=user_id, followed_id=followed_id)
-        try:
-            db.session.add(new_follow)
-            db.session.commit()
-            return make_response(jsonify({'message': 'Followed successfully'}), 201)
-        except Exception as e:
-            db.session.rollback()
-            return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
-
+class Unfollow(Resource):
     @jwt_required()
-    def delete(self, followed_id):
+    def post(self):
         user_id = get_jwt_identity()
-        follow_record = followers.query.filter_by(follower_id=user_id, followed_id=followed_id).first_or_404()
+        data = request.get_json()
+        followed_user_id = data.get('followed_user_id')
 
-        try:
-            db.session.delete(follow_record)
+        if not followed_user_id:
+            return make_response(jsonify({'message': 'Invalid request data'}), 400)
+
+        if user_id == followed_user_id:
+            return make_response(jsonify({'message': 'Cannot unfollow yourself'}), 400)
+
+        existing_follow = db.session.query(followers).filter_by(follower_id=user_id, followed_id=followed_user_id).first()
+        if existing_follow:
+            db.session.execute(followers.delete().where(followers.c.follower_id == user_id, followers.c.followed_id == followed_user_id))
             db.session.commit()
+
+            # Update counts
+            User.query.filter_by(id=user_id).update({'following_count': User.following_count - 1})
+            User.query.filter_by(id=followed_user_id).update({'followers_count': User.followers_count - 1})
+            db.session.commit()
+
             return make_response(jsonify({'message': 'Unfollowed successfully'}), 200)
-        except Exception as e:
-            db.session.rollback()
-            return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
-
-    @jwt_required()
-    def get(self):
-        user_id = get_jwt_identity()
-        followers = followers.query.filter_by(followed_id=user_id).all()
-        result = [{'follower_id': follow.follower_id} for follow in followers]
-        if not result:
-            return make_response(jsonify({'message': 'No followers found'}), 404)
-        return make_response(jsonify(result), 200)
+        else:
+            return make_response(jsonify({'message': 'Not following this user'}), 400)
     
-class UsersFollowing(Resource):
-    @jwt_required()
-    def get(self):
-        user_id = get_jwt_identity()
-        following = followers.query.filter_by(follower_id=user_id).all()
-        result = [{'followed_id': follow.followed_id} for follow in following]
-        if not result:
-            return make_response(jsonify({'message': 'Not following any users'}), 404)
-        return make_response(jsonify(result), 200)
-
-class CheckFollowing(Resource):
-    @jwt_required()
-    def get(self, user_id):
-        current_user_id = get_jwt_identity()
-        is_following = followers.query.filter_by(follower_id=current_user_id, followed_id=user_id).first() is not None
-        return make_response(jsonify({'is_following': is_following}), 200)
-
-api.add_resource(FollowResources, '/users/me/follow', '/users/me/follow/<int:followed_id>')
-api.add_resource(UsersFollowing, '/users/me/following')
-api.add_resource(CheckFollowing, '/users/me/following/<int:user_id>')
+api.add_resource(Myfollowers, '/myfollowers')
+api.add_resource(MyFollowing, '/myfollowing')
+api.add_resource(Follow, '/follow')
+api.add_resource(Unfollow, '/unfollow')
 
 # Setting Resources
 class SettingsResource(Resource):

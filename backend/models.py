@@ -37,7 +37,7 @@ post_tags = db.Table('post_tags',
 followers = db.Table('followers',
     db.Column('follower_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
     db.Column('followed_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
-    db.Column('created_at', db.DateTime, default=datetime.utcnow),
+    db.Column('created_at', db.DateTime, default=datetime.now),
     db.UniqueConstraint('follower_id', 'followed_id', name='uix_follower_followed')
 )
 
@@ -51,6 +51,16 @@ class User(db.Model):
     followers_count = db.Column(db.Integer, default=0)
     following_count = db.Column(db.Integer, default=0)
     is_admin = db.Column(db.Boolean, default=False)
+
+    user_profile = db.relationship('UserProfile', uselist=False, back_populates='user')
+    followers = db.relationship(
+        'User',
+        secondary=followers,
+        primaryjoin=id==followers.c.follower_id,
+        secondaryjoin=id==followers.c.followed_id,
+        backref=db.backref('following', lazy='dynamic'),
+        lazy='dynamic'
+    )
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -76,7 +86,7 @@ class UserProfile(db.Model):
     bio = db.Column(db.String(200))
     social_links = db.Column(db.String(255))
 
-    user = db.relationship('User', backref='profile')
+    user = db.relationship('User', back_populates='user_profile')
 
     def __repr__(self):
         return f'<UserProfile {self.user_id}>'
@@ -113,7 +123,7 @@ class Notifications(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     content = db.Column(db.String(30))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
     read = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
@@ -135,8 +145,8 @@ class Post(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
     title = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     likes_count = db.Column(db.Integer, default=0)
     dislikes_count = db.Column(db.Integer, default=0)
     comments_count = db.Column(db.Integer, default=0)

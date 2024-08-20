@@ -50,6 +50,27 @@ const Explore = () => {
         ));
     };
 
+    const handleFollow = async (userId) => {
+        try {
+            const token = localStorage.getItem('access_token');
+            if (!token) throw new Error('No auth token found');
+            
+            const response = await axios.post(`${baseUrl}/follow/${userId}`, {}, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+    
+            setRecommendedUsers(prevUsers =>
+                prevUsers.map(user =>
+                    user.id === userId ? { ...user, is_following: true } : user
+                )
+            );
+        } catch (error) {
+            console.error('Error following user:', error.response ? error.response.data : error.message);
+        }
+    };
+
     if (loading) return <Spinner />; 
     if (error) return <p>Error: {error}</p>;
 
@@ -128,7 +149,9 @@ const Explore = () => {
                                         className="user-profile-pic"
                                     />
                                     <span>{user.username}</span>
-                                    <button onClick={() => handleFollow(user.id)}>Follow</button>
+                                    <button onClick={() => handleFollow(user.id, user.is_following)}>
+                                        {user.is_following ? 'Unfollow' : 'Follow'}
+                                    </button>
                                 </div>
                             ))
                         ) : (

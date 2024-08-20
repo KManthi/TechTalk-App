@@ -1,57 +1,138 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import NavigationBar from './NavigationBar';
 import MessagesBar from './MessagesBar'; 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog } from '@fortawesome/free-solid-svg-icons';
 
+const baseUrl = 'http://127.0.0.1:5555';
+
 const UserProfile = () => {
-    const [activeSection, setActiveSection] = useState(null); 
-    const [posts] = useState([
-        { id: 1, title: 'First Post' },
-        { id: 2, title: 'Second Post' }
-    ]);
-    const [comments] = useState([
-        { id: 1, content: 'Great post!' },
-        { id: 2, content: 'Thanks for sharing!' }
-    ]);
-    const [favorites] = useState([
-        { id: 1, title: 'Favorite Post 1' },
-        { id: 2, title: 'Favorite Post 2' }
-    ]);
-    const [profile] = useState({
-        profile_picture: 'https://via.placeholder.com/150',
-        username: 'JohnDoe',
-        bio: 'Software Developer at TechTalk',
-        social_links: 'https://github.com/JohnDoe',
-        followers_count: 120,
-        following_count: 80
-    });
+    const [profile, setProfile] = useState(null);
+    const [posts, setPosts] = useState([]);
+    const [comments, setComments] = useState([]);
+    const [favorites, setFavorites] = useState([]);
+    const [activeSection, setActiveSection] = useState('posts');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const token = localStorage.getItem('access_token');
+                if (!token) throw new Error('No auth token found');
+                
+                const profileResponse = await axios.get(`${baseUrl}/my-profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                // Extract user and user_profile data from response
+                const { user, user_profile } = profileResponse.data.data;
+
+                // Parse social links JSON string into an array
+                const socialLinks = JSON.parse(user_profile.social_links);
+
+                // Set profile state
+                setProfile({
+                    ...user,
+                    ...user_profile,
+                    social_links: socialLinks
+                });
+
+                // Fetch posts, comments, and favorites (commented out)
+                // const postsResponse = await axios.get(`${baseUrl}/userposts`, {
+                //     headers: {
+                //         'Authorization': `Bearer ${token}`
+                //     }
+                // });
+                // setPosts(postsResponse.data.posts);
+
+                // const commentsResponse = await axios.get(`${baseUrl}/usercomments`, {
+                //     headers: {
+                //         'Authorization': `Bearer ${token}`
+                //     }
+                // });
+                // setComments(commentsResponse.data.comments);
+
+                // const favoritesResponse = await axios.get(`${baseUrl}/userfavorites`, {
+                //     headers: {
+                //         'Authorization': `Bearer ${token}`
+                //     }
+                // });
+                // setFavorites(favoritesResponse.data.favorites);
+
+                setLoading(false);
+            } catch (error) {
+                setError('Failed to load data');
+                console.error('Error fetching data:', error);
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     const handleSettingsClick = () => {
         navigate('/user-settings');
     };
 
+    const handleFollowersClick = () => {
+        navigate('/followers');
+    };
+
+    const handleFollowingClick = () => {
+        navigate('/following');
+    };
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    if (error) {
+        return <div>{error}</div>;
+    }
+
     return (
         <div className='profile-main-container'>
             <NavigationBar />
-            <div className='profille-content-container'>
+            <div className='profile-content-container'>
                 <div className='user-profile-content'>
                     <div className='profile-info'>
-                        <img className='profile-picture' src={profile.profile_picture} alt="Profile" />
-                        <h2 className='profile-username'>{profile.username}</h2>
-                        <p className='profile-bio'>{profile.bio}</p>
-                        <p className='social-links'>
-                            Social Links: <a href={profile.social_links} target="_blank" rel="noopener noreferrer">{profile.social_links}</a>
-                        </p>
-                        <div className='profile-stats'>
-                            <p>Followers: {profile.followers_count}</p>
-                            <p>Following: {profile.following_count}</p>
-                            <button className='edit-profile-btn' onClick={handleSettingsClick}>
-                                <FontAwesomeIcon icon={faCog} /> Edit Profile
-                            </button>
-                        </div>
+                        {profile && (
+                            <>
+                                <img className='profile-picture' src={profile.profile_pic} alt="Profile" />
+                                <h2 className='profile-username'>{profile.username}</h2>
+                                <p className='profile-bio'>{profile.bio}</p>
+                                <p className='social-links'>
+                                    Social Links: {profile.social_links.length > 0 ? (
+                                        profile.social_links.map((link, index) => (
+                                            <span key={index}>
+                                                <a href={link} target="_blank" rel="noopener noreferrer">{link}</a>
+                                                {index < profile.social_links.length - 1 && ', '}
+                                            </span>
+                                        ))
+                                    ) : (
+                                        'No social links available'
+                                    )}
+                                </p>
+                                <div className='profile-stats'>
+                                    <div className='profile-stats-item' onClick={handleFollowersClick}>
+                                        Followers: {profile.followers_count}
+                                    </div>
+                                    <div className='profile-stats-item' onClick={handleFollowingClick}>
+                                        Following: {profile.following_count}
+                                    </div>
+                                    <button className='edit-profile-btn' onClick={handleSettingsClick}>
+                                        <FontAwesomeIcon icon={faCog} /> Edit Profile
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                     <div className='section-buttons'>
                         <button className={`section-btn ${activeSection === 'posts' ? 'active' : ''}`} onClick={() => setActiveSection('posts')}> Posts</button>

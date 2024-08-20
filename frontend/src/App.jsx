@@ -11,6 +11,8 @@ import NotificationsPage from './components/Notifications';
 import CreatePost from './components/Post';
 import UserSettings from './components/UserSettings';
 import Login from './components/Login';
+import FollowingList from './components/Following';
+import FollowersList from './components/Followers';
 
 const App = () => {
   return (
@@ -27,6 +29,8 @@ const App = () => {
         <Route path="/create-post" element={<CreatePost />} />
         <Route path="/user-settings" element={<UserSettings />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/following" element={<FollowingList />} />
+        <Route path="/followers" element={<FollowersList />} />
       </Routes>
     </Router>
   );

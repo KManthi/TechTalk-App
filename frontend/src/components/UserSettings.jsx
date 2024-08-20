@@ -2,8 +2,22 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import NavigationBar from './NavigationBar';
+import jwtDecode from 'jwt-decode';
 
 const baseUrl = 'http://127.0.0.1:5555';
+
+const getUserID = () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) return null;
+
+    try {
+        const decodedToken = jwtDecode(token);
+        return decodedToken.identity; 
+    } catch (e) {
+        console.error('Error decoding token:', e);
+        return null;
+    }
+};
 
 const UserSettings = () => {
     const [username, setUsername] = useState('');
@@ -14,12 +28,15 @@ const UserSettings = () => {
     const [socialLinks, setSocialLinks] = useState('');
     const [error, setError] = useState(null);
     const navigate = useNavigate();
+    const userId = getUserID();
 
     const handleProfilePicChange = (e) => {
         setProfilePic(e.target.files[0]);
     };
 
     const handleSubmitProfilePic = async () => {
+        if (!userId) return;
+
         try {
             const formData = new FormData();
             formData.append('profile_pic', profilePic);
@@ -27,7 +44,7 @@ const UserSettings = () => {
             const token = localStorage.getItem('access_token');
             if (!token) throw new Error('No auth token found');
 
-            await axios.post(`${baseUrl}/user/profile-pic`, formData, {
+            await axios.post(`${baseUrl}/my-profile`, formData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
@@ -42,11 +59,12 @@ const UserSettings = () => {
     };
 
     const handleUpdateUsername = async () => {
+
         try {
             const token = localStorage.getItem('access_token');
             if (!token) throw new Error('No auth token found');
 
-            await axios.put(`${baseUrl}/userprofiles/1`, { username }, {
+            await axios.put(`${baseUrl}/my-profile`, { username }, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -60,11 +78,13 @@ const UserSettings = () => {
     };
 
     const handleChangePassword = async () => {
+        if (!userId) return;
+
         try {
             const token = localStorage.getItem('access_token');
             if (!token) throw new Error('No auth token found');
 
-            await axios.put(`${baseUrl}/user/password`, { password, newPassword }, {
+            await axios.put(`${baseUrl}/my-profile`, { password, newPassword }, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -78,11 +98,13 @@ const UserSettings = () => {
     };
 
     const handleUpdateProfile = async () => {
+        if (!userId) return;
+
         try {
             const token = localStorage.getItem('access_token');
             if (!token) throw new Error('No auth token found');
 
-            await axios.put(`${baseUrl}/userprofiles/1`, { bio, social_links: socialLinks }, {
+            await axios.put(`${baseUrl}/my-profile`, { bio, social_links: socialLinks }, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -96,12 +118,14 @@ const UserSettings = () => {
     };
 
     const handleDeleteAccount = async () => {
+        if (!userId) return;
+
         if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
             try {
                 const token = localStorage.getItem('access_token');
                 if (!token) throw new Error('No auth token found');
 
-                await axios.delete(`${baseUrl}/userprofiles/1`, {
+                await axios.delete(`${baseUrl}/userprofiles/${userId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -120,7 +144,6 @@ const UserSettings = () => {
     const handleLogout = async () => {
         try {
             const token = localStorage.getItem('access_token');
-            console.log('Token:', token); 
             if (!token) throw new Error('No auth token found');
 
             await axios.delete(`${baseUrl}/logout`, {

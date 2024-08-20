@@ -1697,3 +1697,56 @@ input[type="time"] {
 .navigation-bar a span {
   margin-left: 5px;
 }
+
+.following-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #000;
+}
+
+.following-card button {
+  background-color: #674188;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.following-card button:hover {
+  background-color: #C8A1E0;
+}
+
+.follow-h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: black;
+  font-size: 2.5rem;
+}
+
+.follow-back-button {
+  background-color: #674188;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  border-radius: 40px;
+  width: 25%;
+}
+
+.follow-back-button:hover {
+  background-color: #C8A1E0;
+}
+
+.profile-stats-item {
+  cursor: pointer;
+  color: black;
+}
+
+.profile-stats-item:hover {
+  color: #E2BFD9; 
+}
