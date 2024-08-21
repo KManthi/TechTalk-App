@@ -1,0 +1,9 @@
+[build]
+  command = "cd frontend && npm install && npm run build"
+  publish = "frontend/dist"
+
+[build.environment]
+  PYTHON_VERSION = "3.8.13"
+
+[context.deploy-preview]
+
