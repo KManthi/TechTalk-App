@@ -6,7 +6,7 @@ import "../styles.css";
 function Login() {
   const [formData, setFormData] = useState({
     username: '',
-    email: ''
+    password: ''
   });
 
   const [error, setError] = useState('');
@@ -24,7 +24,6 @@ function Login() {
     e.preventDefault();
     setError('');
     try {
-      // Send username and email to backend
       const response = await axios.post('http://127.0.0.1:5555/login', formData);
 
       const { access_token, refresh_token } = response.data;
@@ -62,15 +61,15 @@ function Login() {
               />
             </div>
             <div className="form-group">
-              <label htmlFor="email">Email:</label>
+              <label htmlFor="password">Password:</label>
               <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
                 onChange={handleChange}
                 required
-                autoComplete="email"
+                autoComplete="password"
               />
             </div>
             <div className='login-button-wrapper'>

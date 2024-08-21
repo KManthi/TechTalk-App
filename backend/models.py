@@ -12,11 +12,6 @@ from sqlalchemy import Enum as SqlEnum
 key = Fernet.generate_key()
 cipher_suite = Fernet(key)
 
-class RatingStatus(Enum):
-    LIKE = "like"
-    DISLIKE = "dislike"
-    NEUTRAL = "neutral"
-
 metadata = MetaData(
     naming_convention={
         "pk": "pk_%(table_name)s",
@@ -28,11 +23,6 @@ metadata = MetaData(
 )
 
 db = SQLAlchemy(metadata=metadata)
-
-post_tags = db.Table('post_tags',
-    db.Column('post_id', db.Integer, db.ForeignKey('posts.id'), primary_key=True),
-    db.Column('tag_id', db.Integer, db.ForeignKey('tags.id'), primary_key=True)
-)
 
 followers = db.Table('followers',
     db.Column('follower_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
@@ -98,7 +88,117 @@ class UserProfile(db.Model):
             'bio': self.bio,
             'social_links': self.social_links
         }
+    
+class Post(db.Model):
+    __tablename__ = 'posts'
+    id = db.Column(db.Integer, primary_key=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    likes_count = db.Column(db.Integer, default=0)
+    dislikes_count = db.Column(db.Integer, default=0)
+    comments_count = db.Column(db.Integer, default=0)
 
+    user = db.relationship('User', backref=db.backref('posts', lazy=True))
+    category = db.relationship('Category', backref=db.backref('posts', lazy=True))
+    tags = db.relationship('Tag', secondary='post_tags', backref=db.backref('posts', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Post {self.title}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'author': self.user.username,
+            'author_id': self.author_id,
+            'category_id': self.category_id,
+            'category_name': self.category.name,
+            'title': self.title,
+            'content': self.content,
+            'likes_count': self.likes_count,
+            'dislikes_count': self.dislikes_count,
+            'comments_count': self.comments_count,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at,
+            'tags': [tag.name for tag in self.tags] 
+        }
+
+class Category(db.Model):
+    __tablename__ = 'categories'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+
+    def __repr__(self):
+        return f'<Category {self.name}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name
+        }
+    
+class Tag(db.Model):
+    __tablename__ = 'tags'
+    id = db.Column(db.Integer, nullable=False, primary_key=True)
+    name = db.Column(db.String(80), unique=True, nullable=False)
+
+    def __repr__(self):
+        return f'<Tag {self.name}>'
+    
+    def to_dict(self):
+                return {
+            'id': self.id,
+            'name':self.name
+
+        }
+    
+post_tags = db.Table('post_tags',
+    db.Column('post_id', db.Integer, db.ForeignKey('posts.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tags.id'), primary_key=True)
+)
+    
+class Attachment(db.Model):
+    __tablename__ = 'attachments'
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    filepath = db.Column(db.String(255), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), nullable=True)
+    comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'), nullable=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False) 
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True)
+
+    post = db.relationship('Post', backref=db.backref('attachments', lazy='dynamic'))
+    comment = db.relationship('Comment', backref=db.backref('attachments', lazy='dynamic'))
+    author = db.relationship('User', backref=db.backref('attachments', lazy='dynamic'))
+    category = db.relationship('Category', backref=db.backref('attachments', lazy='dynamic'))
+
+    def __repr__(self):
+        return f'<Attachment {self.filename}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'filename': self.filename,
+            'filepath': self.filepath,
+            'post_id': self.post_id,
+            'comment_id': self.comment_id,
+            'user_id': self.user_id  
+        }
+    
+    __table_args__ = (
+    db.Index('idx_author_id', 'author_id'),
+    db.Index('idx_category_id', 'category_id'),
+    db.Index('idx_post_id', 'post_id'),
+)
+    
+class RatingStatus(Enum):
+    LIKE = "like"
+    DISLIKE = "dislike"
+    NEUTRAL = "neutral"
+    
 class Rating(db.Model):
     __tablename__ = 'ratings'
     id = db.Column(db.Integer, primary_key=True)
@@ -116,92 +216,7 @@ class Rating(db.Model):
             'user_id': self.user_id,
             'status': self.status.name 
         }
-
-class Notifications(db.Model):
-    __tablename__ = 'notifications'
-
-    id = db.Column(db.Integer, primary_key=True)
-    receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    content = db.Column(db.String(30))
-    created_at = db.Column(db.DateTime, default=datetime.now)
-    read = db.Column(db.Boolean, default=False)
-
-    def __repr__(self):
-        return f'<Notification {self.id}>'
     
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'user_id': self.receiver_id,
-            'content': self.content,
-            'created_at': self.created_at,
-            'read': self.read
-        }
-
-class Post(db.Model):
-    __tablename__ = 'posts'
-    id = db.Column(db.Integer, primary_key=True)
-    author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
-    title = db.Column(db.String(255), nullable=False)
-    content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.now)
-    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
-    likes_count = db.Column(db.Integer, default=0)
-    dislikes_count = db.Column(db.Integer, default=0)
-    comments_count = db.Column(db.Integer, default=0)
-
-    user = db.relationship('User', backref=db.backref('posts', lazy=True))
-    category = db.relationship('Category', backref=db.backref('posts', lazy=True))
-
-    def __repr__(self):
-        return f'<Post {self.title}>'
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'author': self.user.username,
-            'author_id': self.author_id,
-            'category_id': self.category_id,
-            'title': self.title,
-            'content': self.content,
-            'likes_count': self.likes_count,
-            'dislikes_count': self.dislikes_count,
-            'comments_count': self.comments_count,
-            'created_at': self.created_at,
-            'updated_at': self.updated_at
-        }
-
-class Category(db.Model):
-    __tablename__ = 'categories'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), nullable=False)
-
-    def __repr__(self):
-        return f'<Category {self.name}>'
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name
-        }
-
-class Settings(db.Model):
-    __tablename__ = 'settings'
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, primary_key=True)
-    preferences = db.Column(MutableDict.as_mutable(JSON), nullable=False)  
-
-    user = db.relationship('User', backref=db.backref('settings', lazy=True))
-
-    def __repr__(self):
-        return f'<Settings {self.user_id}>'
-    
-    def to_dict(self):
-        return {
-            'user_id': self.user_id,
-            'preferences': self.preferences
-        }
-
 class UserFavourites(db.Model):
     __tablename__ = 'user_favourites'
 
@@ -246,21 +261,6 @@ class Comment(db.Model):
 
         }
     
-class Tag(db.Model):
-    __tablename__ = 'tags'
-    id = db.Column(db.Integer, nullable=False, primary_key=True)
-    name = db.Column(db.String(80), unique=True, nullable=False)
-
-    def __repr__(self):
-        return f'<Tag {self.name}>'
-    
-    def to_dict(self):
-                return {
-            'id': self.id,
-            'name':self.name
-
-        }
-    
 class Messages(db.Model):
     __tablename__ ='messages'
     id = db.Column(db.Integer, primary_key=True)
@@ -291,28 +291,39 @@ class Messages(db.Model):
     def set_content(self, content):
         self.encrypt_content(content)
 
-class Attachment(db.Model):
-    __tablename__ = 'attachments'
-    id = db.Column(db.Integer, primary_key=True)
-    filename = db.Column(db.String(255), nullable=False)
-    filepath = db.Column(db.String(255), nullable=False)
-    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), nullable=True)
-    comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'), nullable=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  
+class Notifications(db.Model):
+    __tablename__ = 'notifications'
 
-    post = db.relationship('Post', backref=db.backref('attachments', lazy='dynamic'))
-    comment = db.relationship('Comment', backref=db.backref('attachments', lazy='dynamic'))
-    user = db.relationship('User', backref=db.backref('attachments', lazy='dynamic'))
+    id = db.Column(db.Integer, primary_key=True)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    content = db.Column(db.String(30))
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    read = db.Column(db.Boolean, default=False)
 
     def __repr__(self):
-        return f'<Attachment {self.filename}>'
+        return f'<Notification {self.id}>'
     
     def to_dict(self):
         return {
             'id': self.id,
-            'filename': self.filename,
-            'filepath': self.filepath,
-            'post_id': self.post_id,
-            'comment_id': self.comment_id,
-            'user_id': self.user_id  
+            'user_id': self.receiver_id,
+            'content': self.content,
+            'created_at': self.created_at,
+            'read': self.read
+        }
+
+class Settings(db.Model):
+    __tablename__ = 'settings'
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, primary_key=True)
+    preferences = db.Column(MutableDict.as_mutable(JSON), nullable=False)  
+
+    user = db.relationship('User', backref=db.backref('settings', lazy=True))
+
+    def __repr__(self):
+        return f'<Settings {self.user_id}>'
+    
+    def to_dict(self):
+        return {
+            'user_id': self.user_id,
+            'preferences': self.preferences
         }

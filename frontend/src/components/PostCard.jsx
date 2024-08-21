@@ -110,14 +110,14 @@ const PostCard = ({ post, fetchPosts, onPostUpdate }) => {
     return (
         <div className='post-actions'>
             <div className='tags-icon-container'>
-                <FontAwesomeIcon icon={faTags} className='tags-icon' />
-                <div className='tags-hover'>
-                    {post.tags && post.tags.map((tag) => (
-                        <span key={tag.id} className='tag'>{tag.name}</span>
-                    ))}
+                    <FontAwesomeIcon icon={faTags} className='tags-icon' />
+                    <div className='tags-hover'>
+                        {post.tags && post.tags.map((tag, index) => (
+                            <span key={index} className='tag'>{tag}</span>
+                        ))}
+                    </div>
                 </div>
-            </div>
-            <button 
+            <button
                 onClick={() => handleLike(post.id, post.liked)} 
                 className={`like-button ${post.liked ? 'liked' : ''}`}
             >

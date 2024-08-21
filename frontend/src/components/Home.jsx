@@ -20,7 +20,7 @@ const HomeComponent = () => {
 
     const fetchPosts = async () => {
         try {
-            const response = await axios.get(`${baseUrl}/posts`, {
+            const response = await axios.get(`${baseUrl}/timeline`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                 }
@@ -98,13 +98,14 @@ const HomeComponent = () => {
                             <div key={post.id} className='post-card'>
                                 <div className='post-header'>
                                     <img 
-                                        src={post.profile_pic || 'https://via.placeholder.com/150'} 
+                                        src={post.author_profile_pic || 'https://via.placeholder.com/150'} 
                                         alt={post.author || 'Profile picture'} 
                                         className='profile-pic' 
                                     />
                                     <h2 onClick={() => handlePostTitleClick(post.id)}>
                                         {post.title}
                                     </h2>
+                                    <div className='post-category'>{post.category_name}</div>
                                 </div>
                                 <p>{post.content}</p>
                                 <div className='small-block'>

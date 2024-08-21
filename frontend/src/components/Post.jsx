@@ -9,33 +9,62 @@ const PostCreationForm = () => {
     const [content, setContent] = useState('');
     const [selectedTags, setSelectedTags] = useState([]);
     const [tags, setTags] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [errors, setErrors] = useState({});
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchTags = async () => {
+        const fetchTagsAndCategories = async () => {
             try {
-                const response = await axios.get(`${baseUrl}/tags`, {
-            });
-            setTags(response.data);
+                const [tagsResponse, categoriesResponse] = await Promise.all([
+                    axios.get(`${baseUrl}/tags`),
+                    axios.get(`${baseUrl}/categories`)
+                ]);
+                setTags(tagsResponse.data);
+                setCategories(categoriesResponse.data);
             } catch (error) {
-                console.error('Error fetching tags:', error);
+                console.error('Error fetching tags and categories:', error);
             }
         };
 
-        fetchTags();
+        fetchTagsAndCategories();
     }, []);
 
     const handleTagChange = (event) => {
-        const value = Array.from(event.target.selectedOptions, (option) => option.value);
-        setSelectedTags(value);
+        const selectedOptions = Array.from(event.target.selectedOptions, (option) => option.value);
+        if (selectedOptions.length <= 3) {
+            setSelectedTags(selectedOptions);
+        } else {
+            alert('You can select up to 3 tags only');
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+        const minTitleLength = 5;
+        const minContentLength = 20;
+
+        if (title.trim().length < minTitleLength) {
+            newErrors.title = `Title must be at least ${minTitleLength} characters long.`;
+        }
+        if (content.trim().length < minContentLength) {
+            newErrors.content = `Content must be at least ${minContentLength} characters long.`;
+        }
+        if (!selectedCategory) {
+            newErrors.category = 'Category is required.';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handlePostCreation = async () => {
-        if (!title.trim() || !content.trim()) return;
+        if (!validateForm()) return;
 
         try {
-            await axios.post(`${baseUrl}/posts`, 
-                { title, content, tags: selectedTags }, 
+            await axios.post(`${baseUrl}/create-post`, 
+                { title, content, category_id: selectedCategory, tags: selectedTags }, 
                 {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -45,6 +74,7 @@ const PostCreationForm = () => {
             setTitle('');
             setContent('');
             setSelectedTags([]);
+            setSelectedCategory('');
             navigate('/home'); 
         } catch (error) {
             console.error('Error creating post:', error);
@@ -59,12 +89,27 @@ const PostCreationForm = () => {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
             />
+            {errors.title && <p className='error'>{errors.title}</p>}
             <textarea
                 rows='5'
                 placeholder='Content'
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
             />
+            {errors.content && <p className='error'>{errors.content}</p>}
+            <select 
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+            >
+                <option value=''>Select Category</option>
+                {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                        {category.name}
+                    </option>
+                ))}
+            </select>
+            {errors.category && <p className='error'>{errors.category}</p>}
+            <p>Select up to 3 tags:</p>
             <select
                 multiple
                 value={selectedTags}

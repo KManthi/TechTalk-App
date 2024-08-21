@@ -766,6 +766,7 @@ body {
   border-radius: 5px;
   margin-bottom: 20px;
   padding: 15px;
+  width: 100%;
 }
 
 .profile-pic {
@@ -1007,10 +1008,6 @@ body {
 
 .section-content li {
   padding: 10px 0;
-}
-
-.section-content p {
-  text-align: center;
 }
 
 .user-settings {
@@ -1762,4 +1759,30 @@ input[type="time"] {
   margin-bottom: 20px;
   border-radius: 40px;
   width: 9%;
+}
+
+.post-category{
+  color: #674188;
+  margin-bottom: 10px;
+  margin-left: 40%;
+  font-weight: bold;
+  font-size: xx-small;
+}
+
+.tag-label{
+  color: #000;
+}
+
+.my-post-card, .user-card {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  padding: 15px;
+}
+
+.my-post-card h2 {
+    cursor: pointer;
+    color: #674188;
+    margin-top: 10px;
+    margin-left: 2%;
 }

@@ -81,6 +81,10 @@ const Explore = () => {
         }
     };
 
+    const handleUserClick = (userId) => {
+        navigate(`/userprofiles/${userId}`);
+    };
+
     if (loading) return <Spinner />; 
     if (error) return <p>Error: {error}</p>;
 
@@ -116,6 +120,7 @@ const Explore = () => {
                                         >
                                             {post.title}
                                         </h3>
+                                        <div className='post-category'>{post.category_name}</div>
                                     </div>
                                     <p>{post.content}</p>
                                     <div className='small-block'>
@@ -157,7 +162,12 @@ const Explore = () => {
                                         alt="Profile"
                                         className="user-profile-pic"
                                     />
-                                    <span>{user.username}</span>
+                                    <span 
+                                        className="user-username"
+                                        onClick={() => handleUserClick(user.id)}
+                                    >
+                                        {user.username}
+                                    </span>
                                     <button 
                                         onClick={(e) => handleFollowUnfollow(e, user.id, user.is_following)}
                                     >

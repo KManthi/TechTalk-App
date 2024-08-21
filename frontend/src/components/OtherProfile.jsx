@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import NavigationBar from './NavigationBar';
+import PostCard from './PostCard';  // Import PostCard to match layout
 import MessagesBar from './MessagesBar'; 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCog } from '@fortawesome/free-solid-svg-icons';
 
 const baseUrl = 'http://127.0.0.1:5555';
 
 const OtherUserProfile = () => {
     const { userId } = useParams();
-    const navigate = useNavigate(); // Hook for navigation
+    const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
     const [posts, setPosts] = useState([]);
     const [comments, setComments] = useState([]);
@@ -38,13 +41,9 @@ const OtherUserProfile = () => {
                     social_links: socialLinks
                 });
 
-                // Fetch posts, comments, and favorites if needed
-                // const postsResponse = await axios.get(`${baseUrl}/userposts`, { headers: { 'Authorization': `Bearer ${token}` } });
-                // setPosts(postsResponse.data.posts);
-                // const commentsResponse = await axios.get(`${baseUrl}/usercomments`, { headers: { 'Authorization': `Bearer ${token}` } });
-                // setComments(commentsResponse.data.comments);
-                // const favoritesResponse = await axios.get(`${baseUrl}/userfavorites`, { headers: { 'Authorization': `Bearer ${token}` } });
-                // setFavorites(favoritesResponse.data.favorites);
+                fetchPosts();  // Fetch posts after profile data is set
+                
+                // If needed, fetch comments and favorites here
 
                 setLoading(false);
             } catch (error) {
@@ -56,6 +55,22 @@ const OtherUserProfile = () => {
 
         fetchData();
     }, [userId]);
+
+    const fetchPosts = async () => {
+        try {
+            const response = await axios.get(`${baseUrl}/users/${userId}/posts`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
+            });
+            setPosts(response.data);
+        } catch (error) {
+            setError('Failed to fetch posts');
+            console.error('Error fetching posts:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleGoBack = () => {
         navigate(-1); // Navigate back to the previous page
@@ -78,7 +93,7 @@ const OtherUserProfile = () => {
                     <div className='profile-info'>
                         {profile && (
                             <>
-                                <img className='profile-picture' src={profile.profile_pic} alt="Profile" />
+                                <img className='profile-picture' src={profile.profile_pic || 'https://via.placeholder.com/150'} alt="Profile" />
                                 <h2 className='profile-username'>{profile.username}</h2>
                                 <p className='profile-bio'>{profile.bio}</p>
                                 <p className='social-links'>
@@ -113,15 +128,42 @@ const OtherUserProfile = () => {
                         {activeSection === 'posts' && (
                             <>
                                 <h1>Posts</h1>
-                                {posts.length > 0 ? (
-                                    <ul>
-                                        {posts.map((post) => (
-                                            <li key={post.id}>{post.title}</li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p>No posts found</p>
-                                )}
+                                {posts.map(post => (
+                                    <div key={post.id} className='my-post-card'>
+                                        <div className='post-header'>
+                                            <img 
+                                                src={post.author_profile_pic || 'https://via.placeholder.com/150'} 
+                                                alt={post.author || 'Profile picture'} 
+                                                className='profile-pic' 
+                                            />
+                                            <h2 onClick={() => handlePostTitleClick(post.id)}>
+                                                {post.title}
+                                            </h2>
+                                            <div className='post-category'>{post.category_name}</div>
+                                        </div>
+                                        <p>{post.content}</p>
+                                        <div className='small-block'>
+                                            <small>Posted by {post.author} on {new Date(post.created_at).toLocaleString()}</small>
+                                        </div>
+                                        <PostCard
+                                            post={post}
+                                            fetchPosts={fetchPosts}
+                                        />
+                                        {post.isExpanded && (
+                                            <div className='expanded-content'>
+                                                <div className='comment-section'>
+                                                    <h3>Comments ({post.comments_count || 0})</h3>
+                                                    {(Array.isArray(post.comments) ? post.comments : []).map((comment, index) => (
+                                                        <div key={index} className='comment'>
+                                                            <p><strong>{comment.user}:</strong> {comment.content}</p>
+                                                            <small>{new Date(comment.created_at).toLocaleString()}</small>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>   
+                                ))}
                             </>
                         )}
                         {activeSection === 'comments' && (

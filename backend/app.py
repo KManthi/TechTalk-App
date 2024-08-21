@@ -55,13 +55,13 @@ def index():
 
 @app.route('/login', methods=['POST'])
 def login():
-    email = request.json.get('email')
     username = request.json.get('username')
-    if not email or not username:
+    password = request.json.get('password')
+    if not username or not password:
         return {'message': 'Missing username or password'}, 400
     
-    user = User.query.filter_by(email=email).first()
-    if user:
+    user = User.query.filter_by(username=username).first()
+    if user and user.check_password(password):
         access_token = create_access_token(identity=user.id, expires_delta=expires)
         refresh_token = create_refresh_token(identity=user.id)
         return {
@@ -105,6 +105,8 @@ class UserResource(Resource):
         db.session.add(user)
         db.session.commit()
         return user.to_dict(), 201
+
+        
     
     @jwt_required()
     def get(self):
@@ -917,14 +919,16 @@ class PostByID(Resource):
             db.session.rollback()
             return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
         
-class PostsFromFollowedUsers(Resource):
+class Timeline(Resource):
     @jwt_required()
     def get(self):
         user_id = get_jwt_identity()
 
         followed_users_ids = db.session.query(followers.c.followed_id).filter(followers.c.follower_id == user_id).subquery()
 
-        posts = Post.query.filter(Post.author_id.in_(followed_users_ids)).order_by(Post.created_at.desc()).all()
+        posts = Post.query.filter(
+            (Post.author_id.in_(followed_users_ids)) | (Post.author_id == user_id)
+        ).order_by(Post.created_at.desc()).all()
 
         result = [post.to_dict() for post in posts]
 
@@ -944,11 +948,67 @@ class MyPosts(Resource):
         result = [post.to_dict() for post in posts]
         return make_response(jsonify(result), 200)
 
-api.add_resource(PostsFromFollowedUsers, '/posts/followed')
+class UserPosts(Resource):
+    @jwt_required()
+    def get(self, user_id):
+        posts = Post.query.filter_by(author_id=user_id).order_by(Post.created_at.desc()).all()
+        result = [post.to_dict() for post in posts]
+        return make_response(jsonify(result), 200)
+
+class CreatePosts(Resource):
+    @jwt_required()
+    def post(self):
+        user_id = get_jwt_identity()
+        data = request.get_json()
+        title = data.get('title')
+        content = data.get('content')
+        category_id = data.get('category_id')
+        tags = data.get('tags', [])
+
+        min_title_length = 5
+        min_content_length = 20
+
+        if not title or len(title) < min_title_length:
+            return make_response(jsonify({
+                'message': f'Bad Request: Title must be at least {min_title_length} characters long.'
+            }), 400)
+
+        if not content or len(content) < min_content_length:
+            return make_response(jsonify({
+                'message': f'Bad Request: Content must be at least {min_content_length} characters long.'
+            }), 400)
+
+        new_post = Post(
+            title=title,
+            content=content,
+            author_id=user_id,
+            category_id=category_id
+        )
+
+        try:
+            db.session.add(new_post)
+            db.session.commit()
+
+            if tags:
+                for tag_id in tags:
+                    tag = Tag.query.get(tag_id)
+                    if tag:
+                        new_post.tags.append(tag)
+                db.session.commit()
+
+            return make_response(jsonify({'message': 'Post created successfully'}), 201)
+
+        except Exception as e:
+            db.session.rollback()
+            return make_response(jsonify({'message': f'Error: {str(e)}'}), 500)
+
+api.add_resource(Timeline, '/timeline')
+api.add_resource(CreatePosts, '/create-post')
 api.add_resource(Posts, '/posts')
 api.add_resource(PostByID, '/posts/<int:id>')
 api.add_resource(PopularPosts, '/trending-posts')
-api.add_resource(MyPosts, '/my-posts')
+api.add_resource(MyPosts, '/myposts')
+api.add_resource(UserPosts, '/users/<int:user_id>/posts')
 
 # Categories Resources
 class Categories(Resource):

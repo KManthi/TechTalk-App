@@ -74,16 +74,25 @@ def create_posts(users, categories, num=30):
             author_id=author.id,
             category_id=choice(categories).id,
             created_at=fake.date_time_between(start_date="-30d", end_date="now"),
-            comments_count=fake.random_int(min=0, max=20),
-            likes_count=fake.random_int(min=0, max=50),
-            dislikes_count=fake.random_int(min=0, max=20)
+            # comments_count=fake.random_int(min=0, max=20),
+            # likes_count=fake.random_int(min=0, max=50),
+            # dislikes_count=fake.random_int(min=0, max=20)
         )
         posts.append(post)
-    db.session.add_all(posts)
-    db.session.commit()
+
+    try:
+        db.session.add_all(posts)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating posts: {e}")
+        raise
     return posts
 
 def create_post_tags(posts, tags):
+    if not posts or not tags:
+        raise ValueError("Posts or tags list is empty.")
+    
     post_tags_set = set()
     for post in posts:
         num_tags = fake.random_int(min=1, max=3)
@@ -92,8 +101,14 @@ def create_post_tags(posts, tags):
             post_tags_set.add((post.id, tag_id))
 
     post_tags_list = [{'post_id': post_id, 'tag_id': tag_id} for post_id, tag_id in post_tags_set]
-    db.session.execute(post_tags.insert(), post_tags_list)
-    db.session.commit()
+    
+    try:
+        db.session.execute(post_tags.insert(), post_tags_list)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating post tags: {e}")
+        raise
 
 def create_ratings(posts, users, n=100, min_posts_with_ratings=2):
     ratings = []
@@ -266,16 +281,20 @@ if __name__ == '__main__':
         user_profiles = create_user_profiles(users)
         print('Creating followers/following...')
         followers = create_followers(users)
-        # categories = create_categories()
-        # tags = create_tags()
-        # posts = create_posts(users, categories)
-        # post_tags = create_post_tags(posts, tags)
-        # ratings = create_ratings(posts, users)
-        # notifications = create_notifications(users)
-        # settings = create_settings(users)
+        print('Creating categories...')
+        categories = create_categories()
+        print('Creating tags...')
+        tags = create_tags()
+        print('Creating posts...')
+        posts = create_posts(users, categories)
+        print('Creating post tags...')
+        post_tags = create_post_tags(posts, tags)
         # user_favourites = create_user_favourites(users, posts)
         # comments = create_comments(posts, users)
         # attachments = create_attachments(posts, comments, users)
+        # ratings = create_ratings(posts, users)
+        # notifications = create_notifications(users)
+        # settings = create_settings(users)
         # messages = create_messages(users)
         
         print("Fake data has been generated and added to the database.")
