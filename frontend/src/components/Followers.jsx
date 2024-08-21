@@ -39,7 +39,7 @@ const FollowersList = () => {
     }, []);
 
     const navigateToUserProfile = (userId) => {
-        navigate(`/profile/${userId}`);
+        navigate(`/userprofiles/${userId}`);
     };
 
     const handleFollowUnfollow = async (e, followedUserId, isFollowed) => {
@@ -79,7 +79,7 @@ const FollowersList = () => {
         <div className='followers-list-container'>
             <NavigationBar />
             <div className='content-container'>
-                <button className='follow-back-button' onClick={() => navigate('/profile')}>Back to Profile</button>
+                <button className='follow-back-button' onClick={() => navigate('/profile')}>Profile</button>
                 <h1 className='follow-h1'>Followers</h1>
                 {followers.length > 0 ? (
                     <ul className='user-list'>

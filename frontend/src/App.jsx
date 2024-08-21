@@ -13,6 +13,7 @@ import UserSettings from './components/UserSettings';
 import Login from './components/Login';
 import FollowingList from './components/Following';
 import FollowersList from './components/Followers';
+import OtherUserProfile from './components/OtherProfile';
 
 const App = () => {
   return (
@@ -21,6 +22,7 @@ const App = () => {
         <Route path="/" element={<WelcomePage />} />        
         <Route path="/signup" element={<Signup />} />
         <Route path="/profile" element={<UserProfilePage />} />
+        <Route path="/userprofiles/:userId" element={<OtherUserProfile />} />
         <Route path="/explore" element={<Explore />} />
         <Route path="/home" element={<Home />} />
         <Route path="/messages" element={<Messages />} />

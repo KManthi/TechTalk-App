@@ -229,10 +229,23 @@ class UserProfiles(Resource):
 class UserProfileByID(Resource):
     @jwt_required()
     def get(self, id):
-        user_profile = UserProfile.query.filter_by(id=id).first()
-        if not user_profile:
-            return make_response(jsonify({'message': 'User profile not found'}), 404)
-        return make_response(jsonify({'data': user_profile.to_dict()}), 200)
+       
+       user_profile = UserProfile.query.filter_by(id=id).first()
+    
+       if not user_profile:
+           return make_response(jsonify({'message': 'User profile not found'}), 404)
+       
+       user = User.query.filter_by(id=user_profile.user_id).first()
+    
+       if not user:
+           return make_response(jsonify({'message': 'User not found'}), 404)
+    
+       response = {
+           'user': user.to_dict(),
+           'user_profile': user_profile.to_dict()
+       }
+    
+       return make_response(jsonify({'data': response}), 200)
     
     @jwt_required()
     def put(self, id):

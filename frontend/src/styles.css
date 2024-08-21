@@ -1735,7 +1735,7 @@ input[type="time"] {
   cursor: pointer;
   margin-bottom: 20px;
   border-radius: 40px;
-  width: 25%;
+  width: 13%;
 }
 
 .follow-back-button:hover {
@@ -1749,4 +1749,17 @@ input[type="time"] {
 
 .profile-stats-item:hover {
   color: #E2BFD9; 
+}
+
+.prof-back-button {
+  background-color: #674188;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-left: 15%;
+  margin-bottom: 20px;
+  border-radius: 40px;
+  width: 9%;
 }

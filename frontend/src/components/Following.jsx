@@ -60,7 +60,7 @@ const FollowingList = () => {
     };
 
     const navigateToUserProfile = (userId) => {
-        navigate(`/profile/${userId}`);
+        navigate(`/userprofiles/${userId}`);
     };
 
     if (loading) return <Spinner />;
@@ -71,7 +71,7 @@ const FollowingList = () => {
             <NavigationBar />
             <div className='content-container'>
                 <button className='follow-back-button' onClick={() => navigate('/profile')}>
-                    Back to Profile
+                    Profile
                 </button>
                 <h1 className='follow-h1'>Following</h1>
                 {following.length > 0 ? (
