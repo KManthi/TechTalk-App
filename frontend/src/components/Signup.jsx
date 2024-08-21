@@ -48,7 +48,7 @@ function Signup() {
     }
 
     try {
-      await axios.post('http://127.0.0.1:5555/users', formData);
+      await axios.post('https://techtalk-app.onrender.com/users', formData);
       setSuccess('Account created successfully!');
       setError('');
       navigate('/home');

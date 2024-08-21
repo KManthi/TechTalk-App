@@ -14,7 +14,7 @@ const Conversations = () => {
     const fetchConversation = async () => {
       try {
         const token = localStorage.getItem('access_token');
-        const response = await axios.get(`http://127.0.0.1:5555/users/me/conversations/${messageId}`, {
+        const response = await axios.get(`https://techtalk-app.onrender.com/users/me/conversations/${messageId}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

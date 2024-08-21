@@ -24,7 +24,7 @@ function Login() {
     e.preventDefault();
     setError('');
     try {
-      const response = await axios.post('http://127.0.0.1:5555/login', formData);
+      const response = await axios.post('https://techtalk-app.onrender.com/login', formData);
 
       const { access_token, refresh_token } = response.data;
 
