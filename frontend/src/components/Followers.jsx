@@ -13,50 +13,63 @@ const FollowersList = () => {
     const [followers, setFollowers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
     const navigate = useNavigate();
 
     useEffect(() => {
-        let isMounted = true;
-
         const fetchFollowers = async () => {
             try {
                 const token = localStorage.getItem('access_token');
                 if (!token) throw new Error('No auth token found');
                 
                 const response = await axios.get(`${baseUrl}/myfollowers`, {
-                    params: {
-                        page,
-                        per_page: 10
-                    },
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
-                if (isMounted) {
-                    setFollowers(prevFollowers => [...prevFollowers, ...response.data]);
-                    setLoading(false);
-                    setHasMore(response.data.length === 10);
-                }
+                setFollowers(response.data);
+                setLoading(false);
             } catch (error) {
-                if (isMounted) {
-                    setError('Failed to load followers');
-                    setLoading(false);
-                }
+                setError('Failed to load followers');
+                setLoading(false);
             }
         };
 
         fetchFollowers();
-
-        return () => {
-            isMounted = false;
-        };
-    }, [page]);
+    }, []);
 
     const navigateToUserProfile = (userId) => {
         navigate(`/profile/${userId}`);
+    };
+
+    const handleFollowUnfollow = async (e, followedUserId, isFollowed) => {
+        e.stopPropagation(); 
+        const token = localStorage.getItem('access_token');
+        if (!token) return; 
+
+        try {
+            const url = isFollowed ? `${baseUrl}/unfollow` : `${baseUrl}/follow`;
+            const method = isFollowed ? 'delete' : 'post';
+            const payload = isFollowed ? { data: { followed_user_id: followedUserId } } : { followed_user_id: followedUserId };
+
+            await axios({
+                method,
+                url,
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                ...(isFollowed && payload),
+                ...(!isFollowed && { data: payload }),
+            });
+
+            setFollowers(prevFollowers =>
+                prevFollowers.map(follower =>
+                    follower.id === followedUserId ? { ...follower, is_followed: !isFollowed } : follower
+                )
+            );
+        } catch (error) {
+            console.error('Failed to follow/unfollow user', error);
+        }
     };
 
     if (loading) return <Spinner />;
@@ -78,15 +91,16 @@ const FollowersList = () => {
                                     className='user-profile-pic'
                                 />
                                 <span>{follower.username}</span>
-                                <button onClick={(e) => e.stopPropagation()}>Follow/Unfollow</button>
+                                <button 
+                                    onClick={(e) => handleFollowUnfollow(e, follower.id, follower.is_followed)}
+                                >
+                                    {follower.is_followed ? 'Unfollow' : 'Follow'}
+                                </button>
                             </li>
                         ))}
                     </ul>
                 ) : (
                     <p>No followers found</p>
-                )}
-                {hasMore && (
-                    <button onClick={() => setPage(prevPage => prevPage + 1)}>Load More</button>
                 )}
             </div>
             <MessagesBar />

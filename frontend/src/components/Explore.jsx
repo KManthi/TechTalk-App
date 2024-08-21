@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import Spinner from './Spinner'; 
 import NavigationBar from './NavigationBar';
 import PostCard from './PostCard'; 
@@ -15,6 +16,7 @@ const Explore = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeSection, setActiveSection] = useState('trendingPosts'); 
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchExploreData = async () => {
@@ -50,24 +52,32 @@ const Explore = () => {
         ));
     };
 
-    const handleFollow = async (userId) => {
+    const handleFollowUnfollow = async (e, userId, isFollowing) => {
+        e.stopPropagation(); 
         try {
             const token = localStorage.getItem('access_token');
             if (!token) throw new Error('No auth token found');
             
-            const response = await axios.post(`${baseUrl}/follow/${userId}`, {}, {
+            const url = isFollowing ? `${baseUrl}/unfollow` : `${baseUrl}/follow`;
+            const method = isFollowing ? 'delete' : 'post';
+            const payload = { followed_user_id: userId };
+
+            await axios({
+                method,
+                url,
                 headers: {
                     'Authorization': `Bearer ${token}`
-                }
+                },
+                data: payload
             });
     
             setRecommendedUsers(prevUsers =>
                 prevUsers.map(user =>
-                    user.id === userId ? { ...user, is_following: true } : user
+                    user.id === userId ? { ...user, is_following: !isFollowing } : user
                 )
             );
         } catch (error) {
-            console.error('Error following user:', error.response ? error.response.data : error.message);
+            console.error('Error following/unfollowing user:', error.response ? error.response.data : error.message);
         }
     };
 
@@ -91,8 +101,7 @@ const Explore = () => {
                     >
                         Discover People
                     </button>
-                    <div className={`bar-indicator ${activeSection === 'trendingPosts' ? 'trending-posts-bar' : 'discover-people-bar'}`}
-                     />
+                    <div className={`bar-indicator ${activeSection === 'trendingPosts' ? 'trending-posts-bar' : 'discover-people-bar'}`} />
                 </div>
 
                 {activeSection === 'trendingPosts' && (
@@ -149,7 +158,9 @@ const Explore = () => {
                                         className="user-profile-pic"
                                     />
                                     <span>{user.username}</span>
-                                    <button onClick={() => handleFollow(user.id, user.is_following)}>
+                                    <button 
+                                        onClick={(e) => handleFollowUnfollow(e, user.id, user.is_following)}
+                                    >
                                         {user.is_following ? 'Unfollow' : 'Follow'}
                                     </button>
                                 </div>
@@ -160,7 +171,7 @@ const Explore = () => {
                     </section>
                 )}
             </div>
-            <MessagesBar messages="" />
+            <MessagesBar />
         </div>
     );
 };

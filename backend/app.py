@@ -329,6 +329,98 @@ api.add_resource(UserProfiles, '/profiles')
 api.add_resource(UserProfileByID, '/userprofiles/<int:id>')
 api.add_resource(MyProfile, '/my-profile')
 
+# Followers Resources
+class Myfollowers(Resource):
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()        
+        
+        follower_ids = db.session.query(followers.c.follower_id).filter(followers.c.followed_id == user_id).all()
+        follower_ids = [f[0] for f in follower_ids]          
+        
+        following_ids = db.session.query(followers.c.followed_id).filter(followers.c.follower_id == user_id).all()
+        following_ids = [f[0] for f in following_ids]
+        
+        followers_list = User.query.filter(User.id.in_(follower_ids)).all()
+        
+        result = []
+        for user in followers_list:
+            user_dict = user.to_dict()
+            user_dict['is_followed'] = user.id in following_ids
+            result.append(user_dict)
+        
+        return make_response(jsonify(result), 200)
+    
+class MyFollowing(Resource):
+    @jwt_required()
+    def get(self):
+        user_id = get_jwt_identity()
+        following_ids = db.session.query(followers.c.followed_id).filter(followers.c.follower_id == user_id).all()
+        following_ids = [f[0] for f in following_ids]  
+        
+        following_list = User.query.filter(User.id.in_(following_ids)).all()
+        
+        result = [user.to_dict() for user in following_list]
+        
+        return make_response(jsonify(result), 200)
+
+class Follow(Resource):
+    @jwt_required()
+    def post(self):
+        user_id = get_jwt_identity()
+        data = request.get_json()
+        followed_user_id = data.get('followed_user_id')
+
+        if not followed_user_id:
+            return make_response(jsonify({'message': 'Invalid request data'}), 400)
+
+        if user_id == followed_user_id:
+            return make_response(jsonify({'message': 'Cannot follow yourself'}), 400)
+
+        existing_follow = db.session.query(followers).filter_by(follower_id=user_id, followed_id=followed_user_id).first()
+        if not existing_follow:
+            db.session.execute(followers.insert().values(follower_id=user_id, followed_id=followed_user_id))
+            db.session.commit()
+
+            User.query.filter_by(id=user_id).update({'following_count': User.following_count + 1})
+            User.query.filter_by(id=followed_user_id).update({'followers_count': User.followers_count + 1})
+            db.session.commit()
+
+            return make_response(jsonify({'message': 'Followed successfully'}), 200)
+        else:
+            return make_response(jsonify({'message': 'Already following'}), 400)
+        
+class Unfollow(Resource):
+    @jwt_required()
+    def delete(self):
+        user_id = get_jwt_identity()
+        data = request.get_json()
+        followed_user_id = data.get('followed_user_id')
+
+        if not followed_user_id:
+            return make_response(jsonify({'message': 'Invalid request data'}), 400)
+
+        if user_id == followed_user_id:
+            return make_response(jsonify({'message': 'Cannot unfollow yourself'}), 400)
+
+        existing_follow = db.session.query(followers).filter_by(follower_id=user_id, followed_id=followed_user_id).first()
+        if existing_follow:
+            db.session.execute(followers.delete().where(followers.c.follower_id == user_id, followers.c.followed_id == followed_user_id))
+            db.session.commit()
+
+            User.query.filter_by(id=user_id).update({'following_count': User.following_count - 1})
+            User.query.filter_by(id=followed_user_id).update({'followers_count': User.followers_count - 1})
+            db.session.commit()
+
+            return make_response(jsonify({'message': 'Unfollowed successfully'}), 200)
+        else:
+            return make_response(jsonify({'message': 'Not following this user'}), 400)
+    
+api.add_resource(Myfollowers, '/myfollowers')
+api.add_resource(MyFollowing, '/myfollowing')
+api.add_resource(Follow, '/follow')
+api.add_resource(Unfollow, '/unfollow')
+
 # Ratings resources
 class Ratings(Resource):
     @jwt_required()
@@ -906,92 +998,6 @@ class CategoryByID(Resource):
 
 api.add_resource(Categories, '/categories')
 api.add_resource(CategoryByID, '/categories/<int:id>')
-
-# Followers Resources
-class Myfollowers(Resource):
-    @jwt_required()
-    def get(self):
-        user_id = get_jwt_identity()        
-        
-        follower_ids = db.session.query(followers.c.follower_id).filter(followers.c.followed_id == user_id).all()
-        follower_ids = [f[0] for f in follower_ids]          
-        
-        followers_list = User.query.filter(User.id.in_(follower_ids)).all()
-        
-        result = [user.to_dict() for user in followers_list]
-        
-        return make_response(jsonify(result), 200)
-    
-class MyFollowing(Resource):
-    @jwt_required()
-    def get(self):
-        user_id = get_jwt_identity()
-        following_ids = db.session.query(followers.c.followed_id).filter(followers.c.follower_id == user_id).all()
-        following_ids = [f[0] for f in following_ids]  
-        
-        following_list = User.query.filter(User.id.in_(following_ids)).all()
-        
-        result = [user.to_dict() for user in following_list]
-        
-        return make_response(jsonify(result), 200)
-
-class Follow(Resource):
-    @jwt_required()
-    def post(self):
-        user_id = get_jwt_identity()
-        data = request.get_json()
-        followed_user_id = data.get('followed_user_id')
-
-        if not followed_user_id:
-            return make_response(jsonify({'message': 'Invalid request data'}), 400)
-
-        if user_id == followed_user_id:
-            return make_response(jsonify({'message': 'Cannot follow yourself'}), 400)
-
-        existing_follow = db.session.query(followers).filter_by(follower_id=user_id, followed_id=followed_user_id).first()
-        if not existing_follow:
-            db.session.execute(followers.insert().values(follower_id=user_id, followed_id=followed_user_id))
-            db.session.commit()
-
-            User.query.filter_by(id=user_id).update({'following_count': User.following_count + 1})
-            User.query.filter_by(id=followed_user_id).update({'followers_count': User.followers_count + 1})
-            db.session.commit()
-
-            return make_response(jsonify({'message': 'Followed successfully'}), 200)
-        else:
-            return make_response(jsonify({'message': 'Already following'}), 400)
-        
-class Unfollow(Resource):
-    @jwt_required()
-    def post(self):
-        user_id = get_jwt_identity()
-        data = request.get_json()
-        followed_user_id = data.get('followed_user_id')
-
-        if not followed_user_id:
-            return make_response(jsonify({'message': 'Invalid request data'}), 400)
-
-        if user_id == followed_user_id:
-            return make_response(jsonify({'message': 'Cannot unfollow yourself'}), 400)
-
-        existing_follow = db.session.query(followers).filter_by(follower_id=user_id, followed_id=followed_user_id).first()
-        if existing_follow:
-            db.session.execute(followers.delete().where(followers.c.follower_id == user_id, followers.c.followed_id == followed_user_id))
-            db.session.commit()
-
-            # Update counts
-            User.query.filter_by(id=user_id).update({'following_count': User.following_count - 1})
-            User.query.filter_by(id=followed_user_id).update({'followers_count': User.followers_count - 1})
-            db.session.commit()
-
-            return make_response(jsonify({'message': 'Unfollowed successfully'}), 200)
-        else:
-            return make_response(jsonify({'message': 'Not following this user'}), 400)
-    
-api.add_resource(Myfollowers, '/myfollowers')
-api.add_resource(MyFollowing, '/myfollowing')
-api.add_resource(Follow, '/follow')
-api.add_resource(Unfollow, '/unfollow')
 
 # Setting Resources
 class SettingsResource(Resource):

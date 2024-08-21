@@ -44,9 +44,12 @@ const FollowingList = () => {
             const token = localStorage.getItem('access_token');
             if (!token) throw new Error('No auth token found');
             
-            await axios.post(`${baseUrl}/unfollow/${userId}`, {}, {
+            await axios.delete(`${baseUrl}/unfollow`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
+                },
+                data: {
+                    followed_user_id: userId
                 }
             });
 
@@ -81,7 +84,9 @@ const FollowingList = () => {
                                     className='user-profile-pic'
                                 />
                                 <span>{user.username}</span>
-                                <button onClick={(e) => { e.stopPropagation(); handleUnfollow(user.id); }}>Unfollow</button>
+                                <button onClick={(e) => { e.stopPropagation(); handleUnfollow(user.id); }}>
+                                    Unfollow
+                                </button>
                             </li>
                         ))}
                     </ul>
