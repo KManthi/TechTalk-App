@@ -7,7 +7,7 @@ import PostCard from './PostCard';
 import MessagesBar from './MessagesBar';
 import '../styles.css'; 
 
-const baseUrl = 'http://127.0.0.1:5555';
+const baseUrl = 'https://techtalk-app.onrender.com';
 const defaultProfilePic = 'https://via.placeholder.com/150';
 
 const Explore = () => {

@@ -6,7 +6,7 @@ import Spinner from './Spinner';
 import MessagesBar from './MessagesBar';
 import '../styles.css';
 
-const baseUrl = 'http://127.0.0.1:5555';
+const baseUrl = 'https://techtalk-app.onrender.com';
 
 const HomeComponent = () => {
     const [posts, setPosts] = useState([]);

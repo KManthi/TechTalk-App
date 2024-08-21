@@ -7,7 +7,7 @@ import MessagesBar from './MessagesBar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog } from '@fortawesome/free-solid-svg-icons';
 
-const baseUrl = 'http://127.0.0.1:5555';
+const baseUrl = 'https://techtalk-app.onrender.com';
 
 const UserProfile = () => {
     const [profile, setProfile] = useState(null);

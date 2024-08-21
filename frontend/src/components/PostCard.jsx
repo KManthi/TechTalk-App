@@ -4,7 +4,7 @@ import '../styles.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTags, faThumbsUp, faThumbsDown, faStar, faComment } from '@fortawesome/free-solid-svg-icons';
 
-const baseUrl = 'http://127.0.0.1:5555';
+const baseUrl = 'https://techtalk-app.onrender.com';
 
 const PostCard = ({ post, fetchPosts, onPostUpdate }) => {
     const [newComment, setNewComment] = useState('');

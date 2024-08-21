@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import NavigationBar from './NavigationBar';
 import jwtDecode from 'jwt-decode';
 
-const baseUrl = 'http://127.0.0.1:5555';
+const baseUrl = 'https://techtalk-app.onrender.com';
 
 const getUserID = () => {
     const token = localStorage.getItem('access_token');
