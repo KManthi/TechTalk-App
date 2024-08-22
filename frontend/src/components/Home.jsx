@@ -92,7 +92,7 @@ const HomeComponent = () => {
                 <main className='main-home-container'>
                     <h1 className='home-title'>Timeline</h1>
                     {posts.length === 0 ? (
-                        <p>No posts found, try following some users.</p>
+                        <p>No posts found, head over to explore and try following some users.</p>
                     ) : (
                         posts.map(post => (
                             <div key={post.id} className='post-card'>
