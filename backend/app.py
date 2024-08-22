@@ -105,7 +105,6 @@ class UserResource(Resource):
         db.session.add(user)
         db.session.commit()
         return user.to_dict(), 201
-
         
     
     @jwt_required()
